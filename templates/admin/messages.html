@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Admin - Messaggi{% endblock %}
+
+{% block content %}
+<div class="ds-container">
+    <div class="ds-screen">
+        <div class="ds-screen-inner">
+            <!-- Header -->
+            <div class="ds-header">
+                <h1>
+                    <i class="fas fa-comments ds-header-icon"></i>GESTIONE MESSAGGI
+                </h1>
+                <div class="ds-nav-links">
+                    <a href="{{ url_for('admin.dashboard') }}" title="Dashboard">
+                        <i class="fas fa-tachometer-alt"></i> DASHBOARD
+                    </a>
+                    <a href="{{ url_for('admin.users') }}" title="Utenti">
+                        <i class="fas fa-users"></i> UTENTI
+                    </a>
+                    <a href="{{ url_for('main.index') }}" title="Chat">
+                        <i class="fas fa-arrow-left"></i> CHAT
+                    </a>
+                </div>
+            </div>
+
+            <div class="ds-card-body">
+                <!-- Search -->
+                <form method="GET" class="ds-search-form ds-mb-2">
+                    <input type="text" name="search" class="ds-input" 
+                           placeholder="Cerca messaggio o utente..." value="{{ search }}">
+                    <button type="submit" class="ds-btn ds-btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+
+                <!-- Messages List -->
+                {% if messages %}
+                <div class="ds-messages-list">
+                    {% for message in messages %}
+                    <div class="ds-admin-message-item">
+                        <div class="ds-admin-message-header">
+                            <div class="ds-admin-message-user">
+                                <img src="{{ url_for('main.uploaded_file', filename=message.profile_pic) }}" 
+                                     alt="{{ message.username }}" class="ds-avatar-sm">
+                                <span class="ds-admin-username">{{ message.username }}</span>
+                            </div>
+                            <span class="ds-text-xs ds-text-muted">
+                                {{ message.timestamp.strftime('%d/%m/%Y %H:%M') }}
+                            </span>
+                        </div>
+                        <div class="ds-admin-message-content">
+                            {{ message.content }}
+                        </div>
+                        <div class="ds-admin-message-actions">
+                            <form method="POST" action="{{ url_for('admin.delete_message', message_id=message.id) }}" 
+                                  onsubmit="return confirm('Eliminare questo messaggio?')">
+                                <button type="submit" class="ds-btn ds-btn-sm ds-btn-danger">
+                                    <i class="fas fa-trash"></i> Elimina
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if pagination.pages > 1 %}
+                <div class="ds-pagination ds-mt-2">
+                    {% if pagination.has_prev %}
+                    <a href="{{ url_for('admin.messages', page=pagination.prev_num, search=search) }}" 
+                       class="ds-btn ds-btn-sm ds-btn-outline">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    <span class="ds-text-sm ds-text-muted">
+                        Pagina {{ pagination.page }} di {{ pagination.pages }}
+                    </span>
+                    
+                    {% if pagination.has_next %}
+                    <a href="{{ url_for('admin.messages', page=pagination.next_num, search=search) }}" 
+                       class="ds-btn ds-btn-sm ds-btn-outline">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% else %}
+                <p class="ds-text-muted ds-text-sm ds-text-center">
+                    {% if search %}
+                    Nessun messaggio trovato per "{{ search }}"
+                    {% else %}
+                    Nessun messaggio presente.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ds-search-form {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .ds-search-form .ds-input {
+        flex: 1;
+    }
+    
+    .ds-messages-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    
+    .ds-admin-message-item {
+        padding: 10px;
+        background: var(--ds-screen-bg);
+        border: 1px solid var(--ds-border);
+        border-radius: 2px;
+    }
+    
+    .ds-admin-message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+    
+    .ds-admin-message-user {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .ds-avatar-sm {
+        width: 24px;
+        height: 24px;
+        border-radius: 2px;
+        border: 1px solid var(--ds-border);
+        object-fit: cover;
+    }
+    
+    .ds-admin-username {
+        font-size: 9px;
+        font-weight: bold;
+    }
+    
+    .ds-admin-message-content {
+        font-size: 9px;
+        padding: 8px;
+        background: var(--ds-card-bg);
+        border: 1px solid var(--ds-border);
+        border-radius: 2px;
+        word-break: break-word;
+        margin-bottom: 8px;
+    }
+    
+    .ds-admin-message-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .ds-pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    @media (max-width: 480px) {
+        .ds-messages-list {
+            max-height: 50vh;
+        }
+        
+        .ds-admin-message-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+    }
+</style>
+{% endblock %}

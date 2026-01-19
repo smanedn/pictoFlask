@@ -118,6 +118,9 @@ app/
 ├── sockets.py       # WebSocket handlers
 ├── utils.py         # Utility functions
 └── routes/          # Route blueprints
+    ├── admin.py     # Admin panel routes
+    ├── auth.py      # Authentication routes
+    └── main.py      # Main routes
 ```
 
 ### Running Tests

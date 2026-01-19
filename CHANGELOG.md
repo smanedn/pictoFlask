@@ -50,6 +50,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project structure documentation
 - API endpoint documentation
 
+## [1.1.0] - 2026-01-19
+
+### Added
+- 👑 **Admin Panel** for moderation and management
+  - Admin dashboard with statistics (user count, message count, admin count)
+  - User management page with search, pagination
+  - Promote/demote users to admin role
+  - Delete users (and their messages)
+  - Message management with search and deletion
+  - Admin-only route protection with `admin_required` decorator
+  - Admin link in navigation (visible only to admins)
+- `is_admin` field added to User model
+
+### Database Migration Required
+If upgrading from v1.0.0, run:
+```sql
+ALTER TABLE user ADD COLUMN is_admin BOOLEAN DEFAULT 0;
+```
+
 ## [Unreleased]
 
 ### Planned
@@ -61,7 +80,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Emoji picker
 - Message search functionality
 - User blocking feature
-- Admin panel for moderation
 - Mobile app (React Native)
 
 ---
@@ -86,4 +104,5 @@ This project uses [Semantic Versioning](https://semver.org/):
 
 ---
 
+[1.1.0]: https://github.com/smanedn/PictoFlask/releases/tag/v1.1.0
 [1.0.0]: https://github.com/smanedn/PictoFlask/releases/tag/v1.0.0

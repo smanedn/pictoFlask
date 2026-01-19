@@ -25,6 +25,7 @@ class User(UserMixin, db.Model):
     last_username_change = db.Column(db.DateTime, nullable=True)
     message_count = db.Column(db.Integer, default=0)
     session_token = db.Column(db.String(64), nullable=True)
+    is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)

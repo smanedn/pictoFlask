@@ -24,6 +24,11 @@
                         <span class="ds-connection-dot"></span>
                         <span id="connectionText">OFFLINE</span>
                     </div>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('admin.dashboard') }}" title="Admin">
+                        <i class="fas fa-shield-alt"></i> ADMIN
+                    </a>
+                    {% endif %}
                     <a href="{{ url_for('main.profile') }}" title="Profilo">
                         <i class="fas fa-user"></i> PROFILO
                     </a>

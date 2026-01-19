@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Admin - Dashboard{% endblock %}
+
+{% block content %}
+<div class="ds-container">
+    <div class="ds-screen">
+        <div class="ds-screen-inner">
+            <!-- Header -->
+            <div class="ds-header">
+                <h1>
+                    <i class="fas fa-shield-alt ds-header-icon"></i>ADMIN PANEL
+                </h1>
+                <div class="ds-nav-links">
+                    <a href="{{ url_for('admin.users') }}" title="Utenti">
+                        <i class="fas fa-users"></i> UTENTI
+                    </a>
+                    <a href="{{ url_for('admin.messages') }}" title="Messaggi">
+                        <i class="fas fa-comments"></i> MESSAGGI
+                    </a>
+                    <a href="{{ url_for('main.index') }}" title="Chat">
+                        <i class="fas fa-arrow-left"></i> CHAT
+                    </a>
+                </div>
+            </div>
+
+            <div class="ds-card-body">
+                <!-- Stats Grid -->
+                <div class="ds-stats-grid">
+                    <div class="ds-stat-card">
+                        <div class="ds-stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="ds-stat-info">
+                            <span class="ds-stat-value">{{ user_count }}</span>
+                            <span class="ds-stat-label">Utenti totali</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ds-stat-card">
+                        <div class="ds-stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="ds-stat-info">
+                            <span class="ds-stat-value">{{ message_count }}</span>
+                            <span class="ds-stat-label">Messaggi totali</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ds-stat-card">
+                        <div class="ds-stat-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="ds-stat-info">
+                            <span class="ds-stat-value">{{ admin_count }}</span>
+                            <span class="ds-stat-label">Amministratori</span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="ds-divider">
+
+                <!-- Recent Users -->
+                <h2 class="ds-text-sm ds-mb-1">
+                    <i class="fas fa-clock"></i> Utenti recenti
+                </h2>
+                
+                {% if recent_users %}
+                <div class="ds-admin-list">
+                    {% for user in recent_users %}
+                    <div class="ds-admin-list-item">
+                        <div class="ds-admin-user-info">
+                            <img src="{{ url_for('main.uploaded_file', filename=user.profile_pic) }}" 
+                                 alt="{{ user.username }}" class="ds-avatar">
+                            <div>
+                                <span class="ds-admin-username">{{ user.username }}</span>
+                                {% if user.is_admin %}
+                                <span class="ds-badge ds-badge-admin">ADMIN</span>
+                                {% endif %}
+                                <span class="ds-text-xs ds-text-muted ds-block">
+                                    {{ user.registered_on.strftime('%d/%m/%Y %H:%M') }}
+                                </span>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('main.public_profile', username=user.username) }}" 
+                           class="ds-btn ds-btn-sm ds-btn-outline">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="ds-text-muted ds-text-sm">Nessun utente registrato.</p>
+                {% endif %}
+
+                <div class="ds-mt-2 ds-flex ds-gap-1">
+                    <a href="{{ url_for('admin.users') }}" class="ds-btn ds-btn-primary">
+                        <i class="fas fa-users"></i> Gestisci utenti
+                    </a>
+                    <a href="{{ url_for('admin.messages') }}" class="ds-btn ds-btn-outline">
+                        <i class="fas fa-comments"></i> Gestisci messaggi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ds-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .ds-stat-card {
+        background: var(--ds-screen-bg);
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .ds-stat-icon {
+        font-size: 20px;
+        color: var(--ds-accent);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--ds-card-bg);
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+    }
+    
+    .ds-stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .ds-stat-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--ds-text);
+    }
+    
+    .ds-stat-label {
+        font-size: 7px;
+        color: var(--ds-text-muted);
+    }
+    
+    .ds-admin-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .ds-admin-list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px;
+        background: var(--ds-screen-bg);
+        border: 1px solid var(--ds-border);
+        border-radius: 2px;
+    }
+    
+    .ds-admin-user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .ds-admin-username {
+        font-size: 9px;
+        font-weight: bold;
+    }
+    
+    .ds-badge {
+        font-size: 6px;
+        padding: 2px 6px;
+        border-radius: 2px;
+        margin-left: 6px;
+    }
+    
+    .ds-badge-admin {
+        background: var(--ds-accent);
+        color: #fff;
+    }
+    
+    .ds-block {
+        display: block;
+    }
+    
+    @media (max-width: 480px) {
+        .ds-stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .ds-stat-value {
+            font-size: 14px;
+        }
+    }
+</style>
+{% endblock %}

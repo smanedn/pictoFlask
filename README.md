@@ -54,6 +54,12 @@ Built with Flask, Socket.IO, and authentic Nintendo DS styling
 - CSRF protection
 - Efficient WebSocket handling
 
+### 👑 **Admin Panel**
+- Admin dashboard with statistics
+- User management (view, promote/demote admin, delete)
+- Message management (view, search, delete)
+- Admin-only access control
+
 ### 📱 **Responsive Design**
 - Desktop optimized (1920x1080+)
 - Tablet support (768px+)
@@ -198,6 +204,7 @@ pictoFlask/
 │   ├── utils.py             # Utility functions
 │   └── routes/
 │       ├── __init__.py
+│       ├── admin.py         # Admin panel routes
 │       ├── auth.py          # Authentication routes
 │       └── main.py          # Main application routes
 ├── static/
@@ -208,6 +215,10 @@ pictoFlask/
 │       └── profiles/        # User profile pictures
 │           └── default.jpg
 ├── templates/
+│   ├── admin/               # Admin panel templates
+│   │   ├── dashboard.html   # Admin dashboard
+│   │   ├── messages.html    # Message management
+│   │   └── users.html       # User management
 │   ├── base.html            # Base template with DS theme
 │   ├── index.html           # Chat room interface
 │   ├── login.html           # Login page
@@ -265,6 +276,12 @@ pictoFlask/
 | GET | `/` | Chat room (requires auth) |
 | GET/POST | `/profile` | Edit profile |
 | GET | `/user/<username>` | Public profile |
+| GET | `/admin` | Admin dashboard (admin only) |
+| GET | `/admin/users` | User management (admin only) |
+| POST | `/admin/users/<id>/toggle-admin` | Toggle admin status |
+| POST | `/admin/users/<id>/delete` | Delete user |
+| GET | `/admin/messages` | Message management (admin only) |
+| POST | `/admin/messages/<id>/delete` | Delete message |
 
 ### WebSocket Events
 
@@ -288,7 +305,7 @@ pictoFlask/
 - [ ] Emoji picker
 - [ ] Message search
 - [ ] User blocking
-- [ ] Admin panel
+- [x] Admin panel
 - [ ] Mobile app (React Native)
 
 ## 🤝 Contributing
