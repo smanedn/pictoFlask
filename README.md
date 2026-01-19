@@ -7,7 +7,7 @@
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7-black?style=for-the-badge&logo=socket.io)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-**A real-time chat application inspired by Nintendo DS's PictoFlask**
+**A real-time chat application inspired by Nintendo DS's PictoChat**
 
 Built with Flask, Socket.IO, and authentic Nintendo DS styling
 
@@ -28,12 +28,12 @@ Built with Flask, Socket.IO, and authentic Nintendo DS styling
 ### 👤 **User System**
 - Secure registration and login
 - Profile picture uploads
-- 16 PictoFlask-inspired color themes per user
+- 16 PictoChat-inspired color themes per user
 - Public profile pages
 - Single-session login (auto-logout on other devices)
 
 ### 🎮 **Nintendo DS Aesthetic**
-- Authentic PictoFlask visual design
+- Authentic PictoChat visual design
 - Press Start 2P pixel font
 - DS-style buttons and screens
 - Light/Dark theme toggle (🌙)
@@ -168,7 +168,7 @@ DATABASE_URL=sqlite:///chat.db
 The app supports DS/3DS themed background music!
 
 **Quick Setup:**
-1. Find or create DS-themed music (see `static/music/FREE_MUSIC_SOURCES.md`)
+1. Find or create DS-themed music
 2. Name it `ds_theme.mp3`
 3. Place in `static/music/` folder
 4. Click the 🔊 button in the app to play!
@@ -177,11 +177,6 @@ The app supports DS/3DS themed background music!
 - [BeepBox.co](https://beepbox.co) - Create custom chiptune (2 minutes!)
 - [FreePD.com](https://freepd.com/chiptune.php) - Public domain 8-bit music
 - [OpenGameArt.org](https://opengameart.org) - Community game music
-
-**Detailed guides in `static/music/`:**
-- 📖 `README.md` - Complete music guide
-- 📋 `SETUP_INSTRUCTIONS.txt` - Quick setup steps
-- 🎵 `FREE_MUSIC_SOURCES.md` - Where to find music
 
 **Music Features:**
 - Toggle with 🔊 button (top-right corner)
@@ -193,7 +188,7 @@ The app supports DS/3DS themed background music!
 ## 📁 Project Structure
 
 ```
-chat_appV2/
+pictoFlask/
 ├── app/
 │   ├── __init__.py          # Application factory
 │   ├── config.py            # Configuration settings
@@ -208,9 +203,6 @@ chat_appV2/
 ├── static/
 │   ├── music/               # Background music files
 │   │   ├── README.md        # Music setup guide
-│   │   ├── SETUP_INSTRUCTIONS.txt
-│   │   ├── FREE_MUSIC_SOURCES.md
-│   │   ├── UI_LAYOUT.txt
 │   │   └── ds_theme.mp3     # (Add your own music file)
 │   └── uploads/
 │       └── profiles/        # User profile pictures
@@ -222,16 +214,17 @@ chat_appV2/
 │   ├── register.html        # Registration page
 │   ├── profile.html         # User profile editor
 │   └── public_profile.html  # Public user profiles
-├── instance/                # Generated: Database and uploads
+├── instance/                # Generated: Database
 ├── venv/                    # Virtual environment (not in git)
 ├── .env                     # Environment variables (not in git)
 ├── .env.example             # Environment template
 ├── .gitignore
+├── CHANGELOG.md             # Version history
+├── CONTRIBUTING.md          # Contribution guidelines
 ├── LICENSE
 ├── README.md
 ├── requirements.txt         # Python dependencies
-├── run.py                   # Application entry point
-└── MUSIC_FEATURE_SUMMARY.md # Music feature documentation
+└── run.py                   # Application entry point
 ```
 
 ## 🚀 Usage
@@ -239,7 +232,7 @@ chat_appV2/
 ### First Time Setup
 
 1. **Register an account** at `/register`
-2. **Choose a profile color** (16 PictoFlask colors available)
+2. **Choose a profile color** (16 PictoChat colors available)
 3. **Upload a profile picture** (optional)
 4. **Start chatting** at `/` (home page)
 
@@ -289,7 +282,7 @@ chat_appV2/
 
 - [ ] Private messaging
 - [ ] Message editing/deletion
-- [ ] Drawing canvas (like real PictoFlask!)
+- [ ] Drawing canvas (like real PictoChat!)
 - [ ] Multiple chat rooms
 - [ ] Image/file sharing
 - [ ] Emoji picker
@@ -340,7 +333,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🙏 Acknowledgments
 
-- **Nintendo** - For the original PictoFlask inspiration
+- **Nintendo** - For the original PictoChat inspiration
 - **Flask Team** - For the amazing web framework
 - **Socket.IO** - For real-time communication
 - **Press Start 2P** - For the authentic pixel font
@@ -354,7 +347,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## ⚠️ Legal Notice
 
-This project is a fan-made tribute to Nintendo DS's PictoFlask. It is not affiliated with, endorsed by, or connected to Nintendo in any way. All trademarks belong to their respective owners.
+This project is a fan-made tribute to Nintendo DS's PictoChat. It is not affiliated with, endorsed by, or connected to Nintendo in any way. All trademarks belong to their respective owners.
 
 ---
 

@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 💬 Real-time chat functionality with Socket.IO
 - 👤 User authentication system (registration, login, logout)
 - 🖼️ Profile customization (avatar upload, 16 color themes)
-- 🎨 Authentic Nintendo DS PictoFlask visual design
+- 🎨 Authentic Nintendo DS PictoChat visual design
 - 🌙 Light/Dark theme toggle
 - 📱 Fully responsive design (mobile, tablet, desktop)
 - 🔔 Sound effects (send, receive, join)
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned
 - Private messaging between users
 - Message editing and deletion
-- Drawing canvas (like real PictoFlask!)
+- Drawing canvas (like real PictoChat!)
 - Multiple chat rooms
 - Image/file sharing in chat
 - Emoji picker

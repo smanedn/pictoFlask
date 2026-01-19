@@ -10,7 +10,7 @@ The app looks for: `ds_theme.mp3` or `ds_theme.ogg`
 Here are some authentic Nintendo DS/3DS music suggestions you can use:
 
 ### Official Nintendo DS Music:
-1. **PictoFlask BGM** - The original PictoFlask background music
+1. **PictoChat BGM** - The original PictoChat background music
 2. **DS Download Play** - Menu music from DS Download Station
 3. **Nintendo DS Menu Theme** - The system menu background music
 4. **Nintendogs Theme** - Calm, friendly background music
