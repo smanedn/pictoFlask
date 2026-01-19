@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}PictoFlask - Profilo{% endblock %}
+
+{% block content %}
+<div class="ds-container">
+    <div class="ds-screen">
+        <div class="ds-screen-inner">
+            <div class="ds-header" style="justify-content: center; background: var(--ds-accent);">
+                <h1>
+                    <i class="fas fa-user ds-header-icon"></i>PROFILO
+                </h1>
+            </div>
+            <div class="ds-card-body ds-text-center">
+                <img src="{{ url_for('main.uploaded_file', filename=current_user.profile_pic) }}"
+                     class="ds-profile-avatar">
+
+                <h2 style="font-size: 14px; margin-bottom: 12px;">{{ current_user.username }}</h2>
+                <p class="ds-text-muted ds-text-sm">
+                    Iscritto il {{ current_user.registered_on.strftime('%d/%m/%Y') }}<br>
+                    Messaggi: <strong>{{ current_user.message_count }}</strong>
+                </p>
+
+                {% if days_until_next_change is not none and days_until_next_change > 0 %}
+                    <p class="ds-text-danger ds-text-xs">
+                        Puoi cambiare username tra {{ days_until_next_change }} giorno{{ 'i' if days_until_next_change > 1 else '' }}
+                    </p>
+                {% elif current_user.last_username_change %}
+                    <p class="ds-text-success ds-text-xs">
+                        Puoi cambiare username ora!
+                    </p>
+                {% endif %}
+
+                <hr class="ds-divider">
+
+                <div class="ds-text-left">
+                    <label class="ds-label">CAMBIA USERNAME</label>
+                    <form method="post" class="ds-mb-2">
+                        <div class="ds-flex ds-gap-1">
+                            <input type="text" name="new_username" class="ds-input" placeholder="Nuovo username" required style="flex: 1;">
+                            <button type="submit" class="ds-btn ds-btn-primary">OK</button>
+                        </div>
+                    </form>
+
+                    <label class="ds-label ds-mt-2">COLORE CHAT</label>
+                    <form method="post" class="ds-mb-2">
+                        <div class="ds-color-picker">
+{% for color in PICTOFLASK_COLORS %}
+                            <label class="ds-color-swatch{% if current_user.chat_color == color %} active{% endif %}" style="background-color: {{ color }};">
+                                <input type="radio" name="chat_color" value="{{ color }}" {% if current_user.chat_color == color %}checked{% endif %}>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="ds-btn ds-btn-primary ds-mt-1">SALVA COLORE</button>
+                    </form>
+
+                    <label class="ds-label ds-mt-2">FOTO PROFILO</label>
+                    <form method="post" enctype="multipart/form-data">
+                        <input type="file" name="profile_pic" class="ds-input ds-mb-1" accept="image/png,image/jpeg">
+                        <div class="ds-hint ds-mb-1">PNG o JPG, max 2MB</div>
+                        <button type="submit" class="ds-btn ds-btn-success">CARICA</button>
+                    </form>
+                </div>
+
+                <hr class="ds-divider">
+                <a href="{{ url_for('main.index') }}" class="ds-btn ds-btn-outline">
+                    <i class="fas fa-arrow-left"></i> CHAT
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

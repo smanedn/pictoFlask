@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block title %}PictoFlask - Chat Room{% endblock %}
+
+{% block content %}
+<!-- Boot Animation -->
+<div class="ds-boot-screen" id="bootScreen">
+    <div class="ds-boot-logo">
+        <i class="fas fa-comments"></i> PictoFlask
+    </div>
+    <div class="ds-boot-text">Connessione...</div>
+</div>
+
+<div class="ds-container">
+    <div class="ds-screen">
+        <div class="ds-screen-inner">
+            <!-- Header -->
+            <div class="ds-header">
+                <h1>
+                    <i class="fas fa-comments ds-header-icon"></i>PictoFlask
+                </h1>
+                <div class="ds-nav-links">
+                    <!-- Connection Status -->
+                    <div id="connectionStatus" class="ds-connection-status disconnected">
+                        <span class="ds-connection-dot"></span>
+                        <span id="connectionText">OFFLINE</span>
+                    </div>
+                    <a href="{{ url_for('main.profile') }}" title="Profilo">
+                        <i class="fas fa-user"></i> PROFILO
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i> ESCI
+                    </a>
+                </div>
+            </div>
+
+            <!-- Online Users Panel -->
+            <div class="ds-online-panel">
+                <div class="ds-online-header">
+                    <span class="ds-online-dot"></span>
+                    <span>UTENTI ONLINE: <span id="onlineCount">0</span></span>
+                </div>
+                <div id="onlineUsers" class="ds-online-users">
+                    <!-- Users will be added here -->
+                </div>
+            </div>
+
+            <!-- Chat Area (Top Screen) -->
+            <div id="chat" class="ds-chat-area">
+                <div class="ds-status">Benvenuto in PictoFlask! Scrivi un messaggio...</div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="ds-typing-indicator"></div>
+
+            <!-- Input Area (Bottom Screen) -->
+            <form id="form" class="ds-input-area">
+                <div class="ds-input-wrapper">
+                    <input type="text" id="input" class="ds-input" placeholder="Scrivi..." autocomplete="off" maxlength="500" required>
+                    <div id="charCounter" class="ds-char-counter">0/500</div>
+                </div>
+                <button class="ds-btn ds-btn-primary" type="submit">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    // ==================== SOUND EFFECTS ====================
+    const sounds = {
+        send: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2JkI2IeG1nanN+iI+OhXlsZGZxfYmRjoZ5bGNlcX6KkY+Gd2xjZXGAi5KQiHdsY2VwgIuTkYh4bWNlb4CLk5GJd21jZG+Ai5OSiXdtY2RvgIuTkol3bWNkb4CLk5KJd21jZG+Ai5OSiXdtY2RvgIuTkol3bWNkb4CLk5KJd21jZG+Ai5KSiXdsY2Rvf4uSkYh3bGNkb3+LkpGJd2xjZG9/i5KRiXdsY2Rvf4uSkYl3bGNkb3+LkpGJd2xjZG9/i5KRiXdsY2Rvf4uSkYl3bGNlb3+LkpGJd2xjZW9/i5KRiXdsY2VwgIuSkYl3bGRlcICMkpKJeG1jZXGAjJKSind'),
+        receive: new Audio('data:audio/wav;base64,UklGRl4GAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YToGAAB/goaCfHh3en+EiIiFgHt3dnh+g4iKiIN+eXZ2en+EiYuJhH95dnZ5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnZ5foSJi4qFgHl2dnl+hImLioWAeXZ2eX6EiYuKhYB5dnZ5foSJi4qFgHl2dnl+hImLioWAeXZ2eX6EiYuKhYB5dnd5foSJi4qF'),
+        join: new Audio('data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YToFAAB3e4KHi4yKhH15dXR2e4GHi4yLh4F7dnRzeX+Gi4yMiYN9d3Rzd32EiYuMi4eBfHdzc3d9hImLjIuHgXx3c3N3fYSJi4yLh4F8d3Nzd32EiYuMi4eBfHdzc3d9hImLjIuHgXx3c3N3fYSJi4yLh4F8d3Nzd32EiYuMi4eBfHdzc3d9hImLjIuHgXx3c3N3fYSJi4yLh4F8d3Nzd32EiYuMi4eBfHdzdHd9hImLjIuHgXx3dHR3fYSJi4yLh4F8d3R0d32EiYuMi4eBfHd0dHd9hImLjIuHgXx3dHR3fYSJi4yLh4F8d3R0eH2EiYuMi4eBfHd0')
+    };
+    
+    let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+    
+    function playSound(type) {
+        if (soundEnabled && sounds[type]) {
+            sounds[type].currentTime = 0;
+            sounds[type].volume = 0.3;
+            sounds[type].play().catch(() => {});
+        }
+    }
+
+    // ==================== DOM ELEMENTS ====================
+    const socket = io();
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const charCounter = document.getElementById('charCounter');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const onlineUsersEl = document.getElementById('onlineUsers');
+    const onlineCountEl = document.getElementById('onlineCount');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const connectionText = document.getElementById('connectionText');
+    const currentUsername = '{{ current_user.username }}';
+    const currentUserColor = '{{ current_user_color }}';
+    
+    // ==================== UNREAD MESSAGES ====================
+    let unreadCount = 0;
+    let isTabFocused = true;
+    const originalTitle = document.title;
+    
+    document.addEventListener('visibilitychange', () => {
+        isTabFocused = !document.hidden;
+        if (isTabFocused) {
+            unreadCount = 0;
+            document.title = originalTitle;
+        }
+    });
+    
+    function incrementUnread() {
+        if (!isTabFocused) {
+            unreadCount++;
+            document.title = `(${unreadCount}) ${originalTitle}`;
+        }
+    }
+
+    // ==================== CHARACTER COUNTER ====================
+    input.addEventListener('input', () => {
+        const len = input.value.length;
+        const max = 500;
+        charCounter.textContent = `${len}/${max}`;
+        charCounter.className = 'ds-char-counter';
+        if (len > 450) charCounter.classList.add('danger');
+        else if (len > 400) charCounter.classList.add('warning');
+    });
+
+    // ==================== TYPING INDICATOR ====================
+    let typingTimeout;
+    let isTyping = false;
+    const typingUsers = new Set();
+    
+    input.addEventListener('input', () => {
+        if (!isTyping) {
+            isTyping = true;
+            socket.emit('typing', { typing: true });
+        }
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            isTyping = false;
+            socket.emit('typing', { typing: false });
+        }, 1500);
+    });
+    
+    socket.on('user_typing', (data) => {
+        if (data.typing) {
+            typingUsers.add(data.username);
+        } else {
+            typingUsers.delete(data.username);
+        }
+        updateTypingIndicator();
+    });
+    
+    function updateTypingIndicator() {
+        if (typingUsers.size === 0) {
+            typingIndicator.innerHTML = '';
+        } else if (typingUsers.size === 1) {
+            const user = [...typingUsers][0];
+            typingIndicator.innerHTML = `${user} sta scrivendo<span class="ds-typing-dots"><span></span><span></span><span></span></span>`;
+        } else {
+            typingIndicator.innerHTML = `${typingUsers.size} utenti stanno scrivendo<span class="ds-typing-dots"><span></span><span></span><span></span></span>`;
+        }
+    }
+
+    // ==================== ONLINE USERS ====================
+    socket.on('online_users', (data) => {
+        const users = data.users || [];
+        onlineCountEl.textContent = users.length;
+        onlineUsersEl.innerHTML = users.map(u => `
+            <a href="/user/${encodeURIComponent(u.username)}" class="ds-online-user" style="border-left: 3px solid ${u.color};">
+                <img src="/uploads/profiles/${u.profile_pic || 'default.jpg'}" alt="${u.username}">
+                <span>${u.username}</span>
+            </a>
+        `).join('');
+    });
+
+    // ==================== CONNECTION STATUS ====================
+    socket.on('connect', () => {
+        connectionStatus.className = 'ds-connection-status connected';
+        connectionText.textContent = 'ONLINE';
+        playSound('join');
+    });
+    
+    socket.on('disconnect', () => {
+        connectionStatus.className = 'ds-connection-status disconnected';
+        connectionText.textContent = 'OFFLINE';
+    });
+
+    // ==================== MESSAGE HANDLING ====================
+    function addMessage(data, isStatus = false) {
+        const div = document.createElement('div');
+
+        if (isStatus) {
+            div.className = 'ds-status';
+            div.textContent = data.msg;
+        } else {
+            const isMe = data.username === currentUsername;
+            div.className = 'ds-message' + (isMe ? ' ds-message-mine' : '');
+
+            const picUrl = `/uploads/profiles/${data.profile_pic || 'default.jpg'}`;
+            const profileUrl = `/user/${encodeURIComponent(data.username)}`;
+            const bubbleColor = data.color || '#61829a';
+
+            div.innerHTML = `
+                <a href="${profileUrl}" title="Profilo di ${data.username}">
+                    <img src="${picUrl}" class="ds-avatar" alt="${data.username}">
+                </a>
+                <div class="ds-bubble" style="background-color: ${isMe ? bubbleColor : ''};">
+                    <a href="${profileUrl}" class="ds-message-username" style="text-decoration:none;color:${isMe ? 'rgba(255,255,255,0.8)' : bubbleColor};">
+                        ${data.username}
+                    </a>
+                    <div class="ds-message-text">${escapeHtml(data.msg)}</div>
+                    <div class="ds-message-time">${data.time}</div>
+                </div>
+            `;
+        }
+
+        chat.appendChild(div);
+
+        const wasAtBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 150;
+        if (wasAtBottom || isStatus) {
+            chat.scrollTop = chat.scrollHeight;
+        }
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ==================== LOAD HISTORY ====================
+    const history = {{ history_json | safe }};
+    if (history && Array.isArray(history)) {
+        if (history.length > 0) {
+            chat.innerHTML = '';
+        }
+        history.forEach(msg => addMessage(msg));
+    }
+
+    // ==================== SOCKET EVENTS ====================
+    socket.on('message', (data) => {
+        addMessage(data);
+        // Clear typing indicator for this user
+        typingUsers.delete(data.username);
+        updateTypingIndicator();
+        // Sound & unread
+        if (data.username !== currentUsername) {
+            playSound('receive');
+            incrementUnread();
+        }
+    });
+    
+    socket.on('status', (data) => {
+        addMessage(data, true);
+        playSound('join');
+    });
+    
+    socket.on('kicked', (data) => {
+        alert(data.msg);
+        window.location.href = '/logout';
+    });
+
+    // ==================== FORM SUBMIT ====================
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const msg = input.value.trim();
+        if (msg) {
+            socket.emit('message', { msg: msg });
+            input.value = '';
+            charCounter.textContent = '0/500';
+            charCounter.className = 'ds-char-counter';
+            isTyping = false;
+            socket.emit('typing', { typing: false });
+            playSound('send');
+        }
+    });
+
+    // ==================== SESSION CHECK ====================
+    setInterval(() => {
+        fetch('/check_session')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.valid) {
+                    alert('Sessione terminata da altro dispositivo.');
+                    window.location.href = '/logout';
+                }
+            })
+            .catch(() => {});
+    }, 3000);
+</script>
+{% endblock %}

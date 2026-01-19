@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}PictoFlask - {{ profile_user.username }}{% endblock %}
+
+{% block content %}
+<div class="ds-container">
+    <div class="ds-screen">
+        <div class="ds-screen-inner">
+            <div class="ds-header" style="justify-content: center; background: {% if is_own_profile %}var(--ds-accent){% else %}var(--ds-header-bg){% endif %};">
+                <h1>
+                    <i class="fas fa-user ds-header-icon"></i>{% if is_own_profile %}TU{% else %}UTENTE{% endif %}
+                </h1>
+            </div>
+            <div class="ds-card-body ds-text-center">
+                <img src="{{ url_for('main.uploaded_file', filename=profile_user.profile_pic) }}"
+                     class="ds-profile-avatar">
+
+                <h2 style="font-size: 14px; margin-bottom: 12px;">{{ profile_user.username }}</h2>
+                <p class="ds-text-muted ds-text-sm">
+                    Iscritto il {{ profile_user.registered_on.strftime('%d/%m/%Y') }}<br>
+                    Messaggi: <strong>{{ profile_user.message_count }}</strong>
+                </p>
+
+                {% if is_own_profile %}
+                    {% if days_until_next_change is not none and days_until_next_change > 0 %}
+                        <p class="ds-text-danger ds-text-xs">
+                            Puoi cambiare username tra {{ days_until_next_change }} giorno{{ 'i' if days_until_next_change > 1 else '' }}
+                        </p>
+                    {% elif profile_user.last_username_change %}
+                        <p class="ds-text-success ds-text-xs">
+                            Puoi cambiare username ora!
+                        </p>
+                    {% endif %}
+
+                    <hr class="ds-divider">
+
+                    <div class="ds-text-left">
+                        <label class="ds-label">CAMBIA USERNAME</label>
+                        <form method="post" action="{{ url_for('main.profile') }}" class="ds-mb-2">
+                            <div class="ds-flex ds-gap-1">
+                                <input type="text" name="new_username" class="ds-input" placeholder="Nuovo username" required style="flex: 1;">
+                                <button type="submit" class="ds-btn ds-btn-primary">OK</button>
+                            </div>
+                        </form>
+
+                        <label class="ds-label ds-mt-2">FOTO PROFILO</label>
+                        <form method="post" action="{{ url_for('main.profile') }}" enctype="multipart/form-data">
+                            <input type="file" name="profile_pic" class="ds-input ds-mb-1" accept="image/png,image/jpeg">
+                            <div class="ds-hint ds-mb-1">PNG o JPG, max 2MB</div>
+                            <button type="submit" class="ds-btn ds-btn-success">CARICA</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <p class="ds-text-muted ds-text-sm ds-mt-2">Profilo pubblico di un altro utente.</p>
+                {% endif %}
+
+                <hr class="ds-divider">
+                <a href="{{ url_for('main.index') }}" class="ds-btn ds-btn-outline">
+                    <i class="fas fa-arrow-left"></i> CHAT
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

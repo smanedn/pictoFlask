@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="it" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{% block title %}PictoFlask{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+    :root {
+        --ds-bg: #c0c0c0;
+        --ds-screen-bg: #e8e8e8;
+        --ds-border: #2c2c2c;
+        --ds-accent: #4a90d9;
+        --ds-text: #1a1a1a;
+        --ds-text-muted: #666666;
+        --ds-card-bg: #f5f5f5;
+        --ds-input-bg: #ffffff;
+        --ds-bubble-my: #61829a;
+        --ds-bubble-other: #d0d0d0;
+        --ds-header-bg: #3a3a3a;
+        --ds-success: #00a238;
+        --ds-error: #fb0018;
+    }
+
+    [data-bs-theme="dark"] {
+        --ds-bg: #1a1a1a;
+        --ds-screen-bg: #252525;
+        --ds-border: #4a4a4a;
+        --ds-accent: #61829a;
+        --ds-text: #e0e0e0;
+        --ds-text-muted: #888888;
+        --ds-card-bg: #2a2a2a;
+        --ds-input-bg: #333333;
+        --ds-bubble-my: #4a7a99;
+        --ds-bubble-other: #3a3a3a;
+        --ds-header-bg: #1a1a1a;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Press Start 2P', monospace;
+        font-size: 10px;
+        line-height: 1.8;
+        background: var(--ds-bg);
+        background-image: 
+            linear-gradient(45deg, rgba(0,0,0,0.03) 25%, transparent 25%),
+            linear-gradient(-45deg, rgba(0,0,0,0.03) 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.03) 75%),
+            linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.03) 75%);
+        background-size: 4px 4px;
+        color: var(--ds-text);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* DS Container */
+    .ds-container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 0 15px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    /* DS Screen styling */
+    .ds-screen {
+        background: var(--ds-screen-bg);
+        border: 3px solid var(--ds-border);
+        border-radius: 4px;
+        box-shadow: 
+            inset 0 0 10px rgba(0,0,0,0.1),
+            0 4px 8px rgba(0,0,0,0.3),
+            0 0 0 2px var(--ds-bg);
+        overflow: hidden;
+    }
+
+    .ds-screen-inner {
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+        margin: 6px;
+        background: var(--ds-card-bg);
+    }
+
+    /* DS Header */
+    .ds-header {
+        background: var(--ds-header-bg);
+        color: #ffffff;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--ds-border);
+    }
+
+    .ds-header h1 {
+        font-size: 12px;
+        margin: 0;
+        letter-spacing: 1px;
+    }
+
+    .ds-header-icon {
+        margin-right: 8px;
+    }
+
+    /* DS Buttons */
+    .ds-btn {
+        font-family: 'Press Start 2P', monospace;
+        font-size: 8px;
+        padding: 8px 12px;
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+        background: var(--ds-input-bg);
+        color: var(--ds-text);
+        cursor: pointer;
+        transition: all 0.1s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .ds-btn:hover {
+        background: var(--ds-accent);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .ds-btn:active {
+        transform: translateY(1px);
+    }
+
+    .ds-btn-primary {
+        background: var(--ds-accent);
+        color: #ffffff;
+    }
+
+    .ds-btn-primary:hover {
+        background: #5580b0;
+    }
+
+    .ds-btn-success {
+        background: var(--ds-success);
+        color: #ffffff;
+    }
+
+    .ds-btn-danger {
+        background: var(--ds-error);
+        color: #ffffff;
+    }
+
+    .ds-btn-outline {
+        background: transparent;
+        border-color: var(--ds-text-muted);
+        color: var(--ds-text-muted);
+    }
+
+    .ds-btn-sm {
+        font-size: 7px;
+        padding: 6px 10px;
+    }
+
+    /* DS Inputs */
+    .ds-input {
+        font-family: 'Press Start 2P', monospace;
+        font-size: 16px; /* Prevents iOS zoom on focus */
+        padding: 10px 12px;
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+        background: var(--ds-input-bg);
+        color: var(--ds-text);
+        width: 100%;
+        outline: none;
+        transition: border-color 0.2s;
+        -webkit-appearance: none; /* Remove iOS default styling */
+        appearance: none;
+    }
+    
+    /* On larger screens, use smaller font */
+    @media (min-width: 481px) {
+        .ds-input {
+            font-size: 9px;
+        }
+    }
+
+    .ds-input:focus {
+        border-color: var(--ds-accent);
+        box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+    }
+
+    .ds-input::placeholder {
+        color: var(--ds-text-muted);
+        opacity: 0.7;
+    }
+
+    /* DS Card */
+    .ds-card {
+        background: var(--ds-card-bg);
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+    }
+
+    .ds-card-body {
+        padding: 16px;
+    }
+
+    /* DS Form */
+    .ds-form-group {
+        margin-bottom: 16px;
+    }
+
+    .ds-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 9px;
+        color: var(--ds-text);
+    }
+
+    .ds-hint {
+        font-size: 7px;
+        color: var(--ds-text-muted);
+        margin-top: 4px;
+    }
+
+    /* DS Alert */
+    .ds-alert {
+        padding: 12px;
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+        margin-bottom: 12px;
+        font-size: 8px;
+    }
+
+    .ds-alert-success {
+        background: rgba(0, 162, 56, 0.15);
+        border-color: var(--ds-success);
+        color: var(--ds-success);
+    }
+
+    .ds-alert-danger {
+        background: rgba(251, 0, 24, 0.15);
+        border-color: var(--ds-error);
+        color: var(--ds-error);
+    }
+
+    .ds-alert-info {
+        background: rgba(74, 144, 217, 0.15);
+        border-color: var(--ds-accent);
+        color: var(--ds-accent);
+    }
+
+    /* DS Chat specific */
+    .ds-chat-area {
+        height: 55vh;
+        height: 55dvh; /* Dynamic viewport height for mobile browsers */
+        min-height: 280px;
+        max-height: 600px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 12px;
+        background: var(--ds-screen-bg);
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
+
+    .ds-chat-area::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .ds-chat-area::-webkit-scrollbar-track {
+        background: var(--ds-card-bg);
+    }
+
+    .ds-chat-area::-webkit-scrollbar-thumb {
+        background: var(--ds-border);
+        border-radius: 2px;
+    }
+
+    /* DS Message bubbles */
+    .ds-message {
+        display: flex;
+        margin-bottom: 12px;
+        align-items: flex-start;
+    }
+
+    .ds-message-mine {
+        flex-direction: row-reverse;
+    }
+
+    .ds-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 2px;
+        border: 2px solid var(--ds-border);
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .ds-message-mine .ds-avatar {
+        margin-left: 10px;
+    }
+
+    .ds-message:not(.ds-message-mine) .ds-avatar {
+        margin-right: 10px;
+    }
+
+    .ds-bubble {
+        max-width: 70%;
+        padding: 10px 12px;
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+        position: relative;
+    }
+
+    .ds-message-mine .ds-bubble {
+        background: var(--ds-bubble-my);
+        color: #ffffff;
+    }
+
+    .ds-message:not(.ds-message-mine) .ds-bubble {
+        background: var(--ds-bubble-other);
+        color: var(--ds-text);
+    }
+
+    .ds-message-username {
+        font-size: 8px;
+        font-weight: bold;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .ds-message-mine .ds-message-username {
+        color: rgba(255,255,255,0.8);
+    }
+
+    .ds-message-text {
+        font-size: 9px;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+
+    .ds-message-time {
+        font-size: 7px;
+        opacity: 0.7;
+        margin-top: 6px;
+        text-align: right;
+    }
+
+    /* DS Status message */
+    .ds-status {
+        text-align: center;
+        font-size: 8px;
+        color: var(--ds-text-muted);
+        padding: 8px;
+        font-style: italic;
+    }
+
+    /* DS Input area */
+    .ds-input-area {
+        padding: 12px;
+        background: var(--ds-card-bg);
+        border-top: 2px solid var(--ds-border);
+        display: flex;
+        gap: 8px;
+    }
+
+    .ds-input-area .ds-input {
+        flex: 1;
+    }
+
+    /* DS Nav links */
+    .ds-nav-links {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .ds-nav-links a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 8px;
+        transition: opacity 0.2s;
+    }
+
+    .ds-nav-links a:hover {
+        opacity: 0.8;
+    }
+
+    /* Theme toggle */
+    .ds-theme-toggle {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+    }
+
+    /* Music toggle */
+    .ds-music-toggle {
+        position: fixed;
+        top: 10px;
+        right: 60px;
+        z-index: 1000;
+    }
+
+    .ds-music-toggle .ds-btn {
+        position: relative;
+    }
+
+    .ds-music-toggle .music-icon {
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+
+    .ds-music-toggle .music-icon.playing {
+        animation: musicPulse 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes musicPulse {
+        from { transform: scale(1); }
+        to { transform: scale(1.1); }
+    }
+
+    /* DS Divider */
+    .ds-divider {
+        border: none;
+        border-top: 2px dashed var(--ds-border);
+        margin: 16px 0;
+    }
+
+    /* DS Text utilities */
+    .ds-text-center { text-align: center; }
+    .ds-text-muted { color: var(--ds-text-muted); }
+    .ds-text-success { color: var(--ds-success); }
+    .ds-text-danger { color: var(--ds-error); }
+    .ds-text-sm { font-size: 8px; }
+    .ds-text-xs { font-size: 7px; }
+
+    /* DS Spacing */
+    .ds-mb-1 { margin-bottom: 8px; }
+    .ds-mb-2 { margin-bottom: 16px; }
+    .ds-mt-1 { margin-top: 8px; }
+    .ds-mt-2 { margin-top: 16px; }
+    .ds-p-1 { padding: 8px; }
+    .ds-p-2 { padding: 16px; }
+
+    /* DS Flex */
+    .ds-flex { display: flex; }
+    .ds-flex-center { justify-content: center; align-items: center; }
+    .ds-flex-between { justify-content: space-between; }
+    .ds-flex-col { flex-direction: column; }
+    .ds-gap-1 { gap: 8px; }
+    .ds-gap-2 { gap: 16px; }
+
+    /* Profile avatar */
+    .ds-profile-avatar {
+        width: 100px;
+        height: 100px;
+        border: 3px solid var(--ds-border);
+        border-radius: 4px;
+        object-fit: cover;
+        display: block;
+        margin: 0 auto 16px;
+    }
+
+    /* Text alignment */
+    .ds-text-left { text-align: left; }
+
+    /* Full width utility */
+    .ds-w-full { width: 100%; }
+
+    /* Auth container (login/register) */
+    .ds-auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 60px);
+        padding: 20px 10px;
+    }
+
+    .ds-auth-container .ds-screen {
+        width: 100%;
+        max-width: 360px;
+    }
+
+    /* ==================== COLOR PICKER ==================== */
+    .ds-color-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px;
+        background: var(--ds-screen-bg);
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+    }
+
+    .ds-color-swatch {
+        width: 28px;
+        height: 28px;
+        border: 2px solid var(--ds-border);
+        border-radius: 2px;
+        cursor: pointer;
+        transition: transform 0.1s, box-shadow 0.1s;
+        position: relative;
+    }
+
+    .ds-color-swatch input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .ds-color-swatch:hover {
+        transform: scale(1.1);
+    }
+
+    .ds-color-swatch.active,
+    .ds-color-swatch:has(input:checked) {
+        box-shadow: 0 0 0 3px var(--ds-accent);
+        transform: scale(1.1);
+    }
+
+    /* ==================== ONLINE USERS PANEL ==================== */
+    .ds-online-panel {
+        background: var(--ds-card-bg);
+        border-bottom: 2px solid var(--ds-border);
+        padding: 8px 12px;
+    }
+
+    .ds-online-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 8px;
+        color: var(--ds-text-muted);
+        margin-bottom: 6px;
+    }
+
+    .ds-online-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--ds-success);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .ds-online-users {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ds-online-user {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 7px;
+        padding: 4px 8px;
+        background: var(--ds-screen-bg);
+        border: 1px solid var(--ds-border);
+        border-radius: 2px;
+    }
+
+    .ds-online-user img {
+        width: 18px;
+        height: 18px;
+        border-radius: 2px;
+        object-fit: cover;
+    }
+
+    /* ==================== TYPING INDICATOR ==================== */
+    .ds-typing-indicator {
+        padding: 6px 12px;
+        font-size: 7px;
+        color: var(--ds-text-muted);
+        font-style: italic;
+        min-height: 22px;
+        border-top: 1px solid var(--ds-border);
+        background: var(--ds-card-bg);
+    }
+
+    .ds-typing-dots {
+        display: inline-flex;
+        gap: 2px;
+        margin-left: 4px;
+    }
+
+    .ds-typing-dots span {
+        width: 4px;
+        height: 4px;
+        background: var(--ds-text-muted);
+        border-radius: 50%;
+        animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .ds-typing-dots span:nth-child(1) { animation-delay: 0s; }
+    .ds-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .ds-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-4px); }
+    }
+
+    /* ==================== CONNECTION STATUS ==================== */
+    .ds-connection-status {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 7px;
+        padding: 4px 8px;
+        border-radius: 2px;
+    }
+
+    .ds-connection-status.connected {
+        color: var(--ds-success);
+    }
+
+    .ds-connection-status.disconnected {
+        color: var(--ds-error);
+    }
+
+    .ds-connection-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .ds-connection-status.connected .ds-connection-dot {
+        background: var(--ds-success);
+    }
+
+    .ds-connection-status.disconnected .ds-connection-dot {
+        background: var(--ds-error);
+    }
+
+    /* ==================== CHARACTER COUNTER ==================== */
+    .ds-char-counter {
+        font-size: 7px;
+        color: var(--ds-text-muted);
+        padding: 4px 0;
+        text-align: right;
+    }
+
+    .ds-char-counter.warning {
+        color: #fb9200;
+    }
+
+    .ds-char-counter.danger {
+        color: var(--ds-error);
+    }
+
+    /* ==================== BOOT ANIMATION ==================== */
+    .ds-boot-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--ds-bg);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 9999;
+        animation: bootFadeOut 0.5s ease-out 1s forwards;
+    }
+
+    .ds-boot-logo {
+        font-size: 16px;
+        color: var(--ds-text);
+        animation: bootPulse 0.5s ease-in-out infinite alternate;
+    }
+
+    .ds-boot-text {
+        font-size: 8px;
+        color: var(--ds-text-muted);
+        margin-top: 16px;
+    }
+
+    @keyframes bootFadeOut {
+        to {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+    }
+
+    @keyframes bootPulse {
+        from { opacity: 0.5; }
+        to { opacity: 1; }
+    }
+
+    /* ==================== INPUT WRAPPER ==================== */
+    .ds-input-wrapper {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    /* ==================== RESPONSIVE DESIGN ==================== */
+    
+    /* Large Desktop (min-width: 1400px) - e.g. 1920x1080 */
+    @media (min-width: 1400px) {
+        body {
+            font-size: 12px;
+        }
+        
+        .ds-container {
+            max-width: 800px;
+            margin: 40px auto;
+        }
+        
+        .ds-screen {
+            border-width: 4px;
+            border-radius: 6px;
+            box-shadow: 
+                inset 0 0 15px rgba(0,0,0,0.1),
+                0 8px 20px rgba(0,0,0,0.3),
+                0 0 0 3px var(--ds-bg);
+        }
+        
+        .ds-screen-inner {
+            margin: 10px;
+            border-width: 3px;
+        }
+        
+        .ds-header {
+            padding: 18px 24px;
+            border-bottom-width: 3px;
+        }
+        
+        .ds-header h1 {
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+        
+        .ds-header-icon {
+            margin-right: 12px;
+        }
+        
+        .ds-nav-links {
+            gap: 20px;
+        }
+        
+        .ds-nav-links a {
+            font-size: 10px;
+        }
+        
+        .ds-chat-area {
+            height: 60vh;
+            min-height: 400px;
+            max-height: 700px;
+            padding: 20px;
+        }
+        
+        .ds-input {
+            font-size: 11px;
+            padding: 14px 16px;
+        }
+        
+        .ds-btn {
+            font-size: 10px;
+            padding: 12px 18px;
+        }
+        
+        .ds-btn-sm {
+            font-size: 9px;
+            padding: 8px 14px;
+        }
+        
+        .ds-input-area {
+            padding: 16px;
+            gap: 12px;
+        }
+        
+        .ds-message {
+            margin-bottom: 16px;
+        }
+        
+        .ds-bubble {
+            max-width: 65%;
+            padding: 14px 18px;
+            border-width: 3px;
+        }
+        
+        .ds-avatar {
+            width: 48px;
+            height: 48px;
+            border-width: 3px;
+        }
+        
+        .ds-message-mine .ds-avatar {
+            margin-left: 14px;
+        }
+        
+        .ds-message:not(.ds-message-mine) .ds-avatar {
+            margin-right: 14px;
+        }
+        
+        .ds-message-username {
+            font-size: 10px;
+            margin-bottom: 6px;
+        }
+        
+        .ds-message-text {
+            font-size: 11px;
+        }
+        
+        .ds-message-time {
+            font-size: 9px;
+            margin-top: 8px;
+        }
+        
+        .ds-status {
+            font-size: 10px;
+            padding: 12px;
+        }
+        
+        .ds-card-body {
+            padding: 24px;
+        }
+        
+        .ds-form-group {
+            margin-bottom: 20px;
+        }
+        
+        .ds-label {
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+        
+        .ds-hint {
+            font-size: 9px;
+            margin-top: 6px;
+        }
+        
+        .ds-divider {
+            margin: 24px 0;
+            border-top-width: 3px;
+        }
+        
+        .ds-alert {
+            padding: 16px;
+            font-size: 10px;
+            border-width: 3px;
+        }
+        
+        .ds-profile-avatar {
+            width: 140px;
+            height: 140px;
+            border-width: 4px;
+            margin-bottom: 24px;
+        }
+        
+        .ds-theme-toggle {
+            top: 20px;
+            right: 20px;
+        }
+        
+        .ds-music-toggle {
+            right: 110px;
+        }
+        
+        /* Auth container desktop */
+        .ds-auth-container {
+            padding: 40px 20px;
+        }
+        
+        .ds-auth-container .ds-screen {
+            max-width: 450px;
+        }
+    }
+    
+    /* Extra Large Desktop (min-width: 1800px) - e.g. 4K scaled */
+    @media (min-width: 1800px) {
+        body {
+            font-size: 14px;
+        }
+        
+        .ds-container {
+            max-width: 900px;
+            margin: 50px auto;
+        }
+        
+        .ds-header h1 {
+            font-size: 18px;
+        }
+        
+        .ds-chat-area {
+            min-height: 450px;
+            max-height: 800px;
+            padding: 24px;
+        }
+        
+        .ds-bubble {
+            padding: 16px 20px;
+        }
+        
+        .ds-avatar {
+            width: 56px;
+            height: 56px;
+        }
+        
+        .ds-message-text {
+            font-size: 12px;
+        }
+        
+        .ds-input {
+            font-size: 12px;
+            padding: 16px 18px;
+        }
+        
+        .ds-btn {
+            font-size: 11px;
+            padding: 14px 20px;
+        }
+        
+        .ds-profile-avatar {
+            width: 160px;
+            height: 160px;
+        }
+        
+        .ds-auth-container .ds-screen {
+            max-width: 500px;
+        }
+    }
+    
+    /* Medium Desktop (min-width: 1024px) */
+    @media (min-width: 1024px) and (max-width: 1399px) {
+        body {
+            font-size: 11px;
+        }
+        
+        .ds-container {
+            max-width: 650px;
+            margin: 30px auto;
+        }
+        
+        .ds-header h1 {
+            font-size: 14px;
+        }
+        
+        .ds-nav-links a {
+            font-size: 9px;
+        }
+        
+        .ds-chat-area {
+            min-height: 350px;
+            max-height: 600px;
+            padding: 16px;
+        }
+        
+        .ds-input {
+            font-size: 10px;
+            padding: 12px 14px;
+        }
+        
+        .ds-btn {
+            font-size: 9px;
+            padding: 10px 14px;
+        }
+        
+        .ds-avatar {
+            width: 42px;
+            height: 42px;
+        }
+        
+        .ds-message-username {
+            font-size: 9px;
+        }
+        
+        .ds-message-text {
+            font-size: 10px;
+        }
+        
+        .ds-profile-avatar {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .ds-auth-container .ds-screen {
+            max-width: 400px;
+        }
+    }
+    
+    /* Tablet and smaller (max-width: 768px) */
+    @media (max-width: 768px) {
+        body {
+            font-size: 9px;
+        }
+        
+        .ds-container {
+            max-width: 100%;
+            margin: 10px auto;
+            padding: 0 8px;
+        }
+        
+        .ds-screen {
+            border-width: 2px;
+            border-radius: 3px;
+        }
+        
+        .ds-screen-inner {
+            margin: 4px;
+        }
+        
+        .ds-header {
+            padding: 10px 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .ds-header h1 {
+            font-size: 11px;
+        }
+        
+        .ds-nav-links {
+            gap: 8px;
+        }
+        
+        .ds-nav-links a {
+            font-size: 7px;
+        }
+        
+        .ds-chat-area {
+            height: 50vh;
+            min-height: 250px;
+            padding: 10px;
+        }
+        
+        .ds-input {
+            font-size: 8px;
+            padding: 8px 10px;
+        }
+        
+        .ds-btn {
+            font-size: 7px;
+            padding: 8px 10px;
+        }
+        
+        .ds-input-area {
+            padding: 10px;
+            gap: 6px;
+        }
+        
+        .ds-bubble {
+            max-width: 80%;
+            padding: 8px 10px;
+        }
+        
+        .ds-avatar {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .ds-message-username {
+            font-size: 7px;
+        }
+        
+        .ds-message-text {
+            font-size: 8px;
+        }
+        
+        .ds-message-time {
+            font-size: 6px;
+        }
+        
+        .ds-card-body {
+            padding: 12px;
+        }
+        
+        .ds-profile-avatar {
+            width: 80px;
+            height: 80px;
+        }
+    }
+    
+    /* Mobile phones (max-width: 480px) */
+    @media (max-width: 480px) {
+        body {
+            font-size: 8px;
+            line-height: 1.6;
+        }
+        
+        .ds-container {
+            margin: 5px auto;
+            padding: 0 5px;
+        }
+        
+        .ds-screen {
+            box-shadow: 
+                inset 0 0 5px rgba(0,0,0,0.1),
+                0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .ds-screen-inner {
+            margin: 3px;
+            border-width: 1px;
+        }
+        
+        .ds-header {
+            padding: 8px 10px;
+            border-bottom-width: 1px;
+        }
+        
+        .ds-header h1 {
+            font-size: 9px;
+            letter-spacing: 0.5px;
+        }
+        
+        .ds-header-icon {
+            margin-right: 4px;
+        }
+        
+        .ds-nav-links {
+            gap: 6px;
+        }
+        
+        .ds-nav-links a {
+            font-size: 6px;
+        }
+        
+        /* Hide text labels on very small screens, show only icons */
+        .ds-nav-links a span.nav-text {
+            display: none;
+        }
+        
+        .ds-chat-area {
+            height: 45vh;
+            min-height: 200px;
+            max-height: 350px;
+            padding: 8px;
+        }
+        
+        .ds-input {
+            font-size: 8px;
+            padding: 8px;
+        }
+        
+        .ds-btn {
+            font-size: 7px;
+            padding: 6px 8px;
+        }
+        
+        .ds-btn-sm {
+            font-size: 6px;
+            padding: 5px 7px;
+        }
+        
+        .ds-input-area {
+            padding: 8px;
+            gap: 5px;
+        }
+        
+        .ds-message {
+            margin-bottom: 10px;
+        }
+        
+        .ds-bubble {
+            max-width: 85%;
+            padding: 6px 8px;
+            border-width: 1px;
+        }
+        
+        .ds-avatar {
+            width: 28px;
+            height: 28px;
+            border-width: 1px;
+        }
+        
+        .ds-message-mine .ds-avatar {
+            margin-left: 6px;
+        }
+        
+        .ds-message:not(.ds-message-mine) .ds-avatar {
+            margin-right: 6px;
+        }
+        
+        .ds-message-username {
+            font-size: 6px;
+            margin-bottom: 2px;
+        }
+        
+        .ds-message-text {
+            font-size: 7px;
+        }
+        
+        .ds-message-time {
+            font-size: 5px;
+            margin-top: 4px;
+        }
+        
+        .ds-status {
+            font-size: 7px;
+            padding: 6px;
+        }
+        
+        .ds-card-body {
+            padding: 10px;
+        }
+        
+        .ds-form-group {
+            margin-bottom: 12px;
+        }
+        
+        .ds-label {
+            font-size: 8px;
+            margin-bottom: 6px;
+        }
+        
+        .ds-hint {
+            font-size: 6px;
+        }
+        
+        .ds-divider {
+            margin: 12px 0;
+            border-top-width: 1px;
+        }
+        
+        .ds-alert {
+            padding: 8px;
+            font-size: 7px;
+            border-width: 1px;
+        }
+        
+        .ds-profile-avatar {
+            width: 70px;
+            height: 70px;
+            border-width: 2px;
+        }
+        
+        .ds-theme-toggle {
+            top: 5px;
+            right: 5px;
+        }
+        
+        .ds-music-toggle {
+            top: 5px;
+            right: 55px;
+        }
+        
+        /* Form flex layout on mobile */
+        .ds-flex {
+            flex-wrap: wrap;
+        }
+        
+        .ds-flex.ds-gap-1 {
+            gap: 6px;
+        }
+        
+        /* Auth container mobile */
+        .ds-auth-container {
+            min-height: calc(100vh - 40px);
+            padding: 15px 8px;
+            align-items: flex-start;
+            padding-top: 30px;
+        }
+        
+        .ds-auth-container .ds-screen {
+            max-width: 100%;
+        }
+    }
+    
+    /* Extra small phones (max-width: 360px) */
+    @media (max-width: 360px) {
+        .ds-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .ds-header h1 {
+            font-size: 8px;
+        }
+        
+        .ds-nav-links {
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .ds-chat-area {
+            height: 40vh;
+            min-height: 180px;
+        }
+        
+        .ds-bubble {
+            max-width: 90%;
+        }
+        
+        .ds-avatar {
+            width: 24px;
+            height: 24px;
+        }
+    }
+    
+    /* Landscape orientation adjustments */
+    @media (max-height: 500px) and (orientation: landscape) {
+        .ds-chat-area {
+            height: 35vh;
+            min-height: 150px;
+            max-height: 200px;
+        }
+        
+        .ds-container {
+            margin: 5px auto;
+        }
+    }
+</style>
+</head>
+<body>
+
+    <!-- Music Toggle -->
+    <div class="ds-music-toggle">
+        <button id="music-toggle" class="ds-btn ds-btn-sm ds-btn-outline" title="Musica di sottofondo">
+            <i class="fas fa-volume-up music-icon"></i>
+        </button>
+    </div>
+
+    <!-- Theme Toggle -->
+    <div class="ds-theme-toggle">
+        <button id="theme-toggle" class="ds-btn ds-btn-sm ds-btn-outline" title="Cambia tema">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Background Music -->
+    <audio id="bgMusic" loop>
+        <source src="{{ url_for('static', filename='music/ds_theme.mp3') }}" type="audio/mpeg">
+        <source src="{{ url_for('static', filename='music/ds_theme.ogg') }}" type="audio/ogg">
+    </audio>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="ds-container">
+                {% for category, message in messages %}
+                    <div class="ds-alert ds-alert-{{ 'danger' if category == 'error' else category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+    <script>
+        const toggleBtn = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-bs-theme', savedTheme);
+        toggleBtn.innerHTML = savedTheme === 'dark' 
+            ? '<i class="fas fa-sun"></i>' 
+            : '<i class="fas fa-moon"></i>';
+
+        toggleBtn.addEventListener('click', () => {
+            const current = html.getAttribute('data-bs-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-bs-theme', next);
+            toggleBtn.innerHTML = next === 'dark' 
+                ? '<i class="fas fa-sun"></i>' 
+                : '<i class="fas fa-moon"></i>';
+            localStorage.setItem('theme', next);
+        });
+
+        // Background Music Control
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggleBtn = document.getElementById('music-toggle');
+        const musicIcon = musicToggleBtn.querySelector('.music-icon');
+        
+        // Load saved music preference
+        let musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+        bgMusic.volume = 0.3; // Set volume to 30%
+        
+        // Update button state
+        function updateMusicButton(isPlaying) {
+            if (isPlaying) {
+                musicIcon.classList.add('playing');
+                musicToggleBtn.classList.remove('ds-btn-outline');
+                musicToggleBtn.classList.add('ds-btn-primary');
+                musicIcon.className = 'fas fa-volume-up music-icon playing';
+            } else {
+                musicIcon.classList.remove('playing');
+                musicToggleBtn.classList.remove('ds-btn-primary');
+                musicToggleBtn.classList.add('ds-btn-outline');
+                musicIcon.className = 'fas fa-volume-mute music-icon';
+            }
+        }
+        
+        // Try to autoplay if enabled (may be blocked by browser)
+        if (musicEnabled) {
+            bgMusic.play().then(() => {
+                updateMusicButton(true);
+            }).catch(() => {
+                // Autoplay blocked - wait for user interaction
+                musicEnabled = false;
+                updateMusicButton(false);
+            });
+        } else {
+            updateMusicButton(false);
+        }
+        
+        // Toggle music on button click
+        musicToggleBtn.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.play().then(() => {
+                    musicEnabled = true;
+                    localStorage.setItem('musicEnabled', 'true');
+                    updateMusicButton(true);
+                }).catch((e) => {
+                    console.log('Error playing music:', e);
+                });
+            } else {
+                bgMusic.pause();
+                musicEnabled = false;
+                localStorage.setItem('musicEnabled', 'false');
+                updateMusicButton(false);
+            }
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

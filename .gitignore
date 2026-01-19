@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Instance folder (database, uploads, etc.)
+instance/
+
+# Uploaded files
+static/uploads/profiles/*
+!static/uploads/profiles/default.jpg
+
+# Music files (users should add their own)
+static/music/*.mp3
+static/music/*.ogg
+static/music/*.wav
+!static/music/*.md
+!static/music/*.txt
+
+# Environment variables
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

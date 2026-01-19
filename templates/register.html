@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}PictoFlask - Registrati{% endblock %}
+
+{% block content %}
+<div class="ds-container ds-auth-container">
+    <div class="ds-screen">
+        <div class="ds-screen-inner">
+            <div class="ds-header" style="justify-content: center; background: var(--ds-success);">
+                <h1>
+                    <i class="fas fa-user-plus ds-header-icon"></i>REGISTRATI
+                </h1>
+            </div>
+            <div class="ds-card-body">
+                <form method="post">
+                    <div class="ds-form-group">
+                        <label class="ds-label">USERNAME</label>
+                        <input type="text" name="username" class="ds-input" required autofocus>
+                        <div class="ds-hint">Sarà salvato in minuscolo e deve essere unico</div>
+                    </div>
+                    <div class="ds-form-group">
+                        <label class="ds-label">PASSWORD</label>
+                        <input type="password" name="password" class="ds-input" required>
+                    </div>
+                    <button type="submit" class="ds-btn ds-btn-success" style="width: 100%;">REGISTRATI</button>
+                </form>
+                <hr class="ds-divider">
+                <p class="ds-text-center ds-text-sm">Hai già un account? <a href="{{ url_for('auth.login') }}">Login</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
