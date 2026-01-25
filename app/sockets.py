@@ -4,17 +4,15 @@ from flask_socketio import emit, join_room
 from flask_login import current_user, login_required
 
 from .extensions import db, socketio
-from .models import Message
+from .models import Message, PrivateMessage
 from .utils import check_rate_limit
 
 ROOM = "main_chat"
-
-# Track online users: {sid: {username, profile_pic, color}}
 online_users = {}
+user_sid_map = {}
 
 
 def get_online_users_list():
-    """Get unique online users list"""
     seen = set()
     users = []
     for data in online_users.values():
@@ -29,7 +27,6 @@ def get_online_users_list():
 
 
 def broadcast_online_users():
-    """Send updated online users list to all clients"""
     emit('online_users', {'users': get_online_users_list()}, room=ROOM)
 
 
@@ -41,13 +38,15 @@ def handle_connect():
         return False
 
     join_room(ROOM)
+    join_room(f"user_{current_user.id}")
     
-    # Add user to online list
     online_users[request.sid] = {
         'username': current_user.username,
         'profile_pic': current_user.profile_pic,
-        'color': current_user.chat_color or '#61829a'
+        'color': current_user.chat_color or '#61829a',
+        'user_id': current_user.id
     }
+    user_sid_map[current_user.id] = request.sid
     
     emit('status', {'msg': f"{current_user.username} è entrato nella chat!"}, room=ROOM)
     broadcast_online_users()
@@ -55,10 +54,12 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    # Remove user from online list
     if request.sid in online_users:
         username = online_users[request.sid]['username']
+        user_id = online_users[request.sid].get('user_id')
         del online_users[request.sid]
+        if user_id and user_sid_map.get(user_id) == request.sid:
+            del user_sid_map[user_id]
         emit('status', {'msg': f"{username} ha lasciato la chat."}, room=ROOM)
         broadcast_online_users()
 
@@ -66,7 +67,6 @@ def handle_disconnect():
 @socketio.on('typing')
 @login_required
 def handle_typing(data):
-    """Handle typing indicator"""
     is_typing = data.get('typing', False)
     emit('user_typing', {
         'username': current_user.username,
@@ -109,3 +109,49 @@ def handle_message(data):
         'profile_pic': current_user.profile_pic,
         'color': current_user.chat_color or '#61829a'
     }, room=ROOM)
+
+
+@socketio.on('private_message')
+@login_required
+def handle_private_message(data):
+    if not check_rate_limit(current_user.id):
+        emit('pm_error', {'msg': "Aspetta un attimo tra un messaggio e l'altro"}, to=request.sid)
+        return
+
+    recipient_id = data.get('recipient_id')
+    msg = str(data.get('msg', '')).strip()[:500]
+    
+    if not msg or not recipient_id:
+        return
+
+    new_pm = PrivateMessage(
+        sender_id=current_user.id,
+        recipient_id=recipient_id,
+        content=msg
+    )
+    db.session.add(new_pm)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        emit('pm_error', {'msg': 'Errore nel salvataggio del messaggio'}, to=request.sid)
+        return
+
+    message_data = {
+        'id': new_pm.id,
+        'sender_id': current_user.id,
+        'sender_username': current_user.username,
+        'sender_profile_pic': current_user.profile_pic,
+        'content': msg,
+        'timestamp': datetime.now(timezone.utc).strftime("%H:%M")
+    }
+
+    emit('pm_sent', message_data, to=request.sid)
+    emit('pm_received', message_data, room=f"user_{recipient_id}")
+
+
+def notify_private_message(recipient_id, sender_username):
+    emit('pm_notification', {
+        'sender': sender_username
+    }, room=f"user_{recipient_id}", namespace='/')

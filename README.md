@@ -32,6 +32,13 @@ Built with Flask, Socket.IO, and authentic Nintendo DS styling
 - Public profile pages
 - Single-session login (auto-logout on other devices)
 
+### ✉️ **Private Messaging**
+- Direct messaging between users
+- Conversation-based inbox
+- Unread message badges
+- Real-time notifications
+- Left sidebar menu for quick access
+
 ### 🎮 **Nintendo DS Aesthetic**
 - Authentic PictoChat visual design
 - Press Start 2P pixel font
@@ -199,14 +206,15 @@ pictoFlask/
 │   ├── __init__.py          # Application factory
 │   ├── config.py            # Configuration settings
 │   ├── extensions.py        # Flask extensions (DB, Login, SocketIO)
-│   ├── models.py            # Database models (User, Message)
+│   ├── models.py            # Database models (User, Message, PrivateMessage)
 │   ├── sockets.py           # WebSocket event handlers
 │   ├── utils.py             # Utility functions
 │   └── routes/
 │       ├── __init__.py
 │       ├── admin.py         # Admin panel routes
 │       ├── auth.py          # Authentication routes
-│       └── main.py          # Main application routes
+│       ├── main.py          # Main application routes
+│       └── messages.py      # Private messaging routes
 ├── static/
 │   ├── music/               # Background music files
 │   │   ├── README.md        # Music setup guide
@@ -219,7 +227,10 @@ pictoFlask/
 │   │   ├── dashboard.html   # Admin dashboard
 │   │   ├── messages.html    # Message management
 │   │   └── users.html       # User management
-│   ├── base.html            # Base template with DS theme
+│   ├── messages/            # Private messaging templates
+│   │   ├── inbox.html       # Conversations list
+│   │   └── conversation.html # Chat with user
+│   ├── base.html            # Base template with DS theme + sidebar
 │   ├── index.html           # Chat room interface
 │   ├── login.html           # Login page
 │   ├── register.html        # Registration page
@@ -254,6 +265,8 @@ pictoFlask/
 | **Send Message** | Type in the input box and press Enter or click Send |
 | **Theme Toggle** | Click 🌙 button (top-right) for dark/light mode |
 | **Music Toggle** | Click 🔊 button (top-right) for background music |
+| **Open Menu** | Click ☰ button (top-left) for sidebar menu |
+| **Private Message** | Click user profile → "INVIA MESSAGGIO" or use sidebar |
 | **View Profile** | Click your username or "PROFILO" in header |
 | **Edit Profile** | Go to profile page, update info, click Save |
 | **See Online Users** | Check the panel above chat (auto-updates) |
@@ -282,6 +295,10 @@ pictoFlask/
 | POST | `/admin/users/<id>/delete` | Delete user |
 | GET | `/admin/messages` | Message management (admin only) |
 | POST | `/admin/messages/<id>/delete` | Delete message |
+| GET | `/messages` | Private messages inbox |
+| GET | `/messages/conversation/<user_id>` | Conversation with user |
+| POST | `/messages/send/<user_id>` | Send private message |
+| GET | `/messages/unread_count` | Get unread count (API) |
 
 ### WebSocket Events
 
@@ -294,10 +311,13 @@ pictoFlask/
 | `online_users` | Server → Client | Online users list |
 | `status` | Server → Client | System messages |
 | `kicked` | Server → Client | Session invalidated |
+| `private_message` | Client → Server | Send private message |
+| `pm_sent` | Server → Client | Private message sent confirmation |
+| `pm_received` | Server → Client | New private message received |
 
 ## 🎯 Roadmap
 
-- [ ] Private messaging
+- [x] Private messaging
 - [ ] Message editing/deletion
 - [ ] Drawing canvas (like real PictoChat!)
 - [ ] Multiple chat rooms

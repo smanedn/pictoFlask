@@ -412,6 +412,118 @@
         z-index: 1000;
     }
 
+    /* ==================== LEFT SIDEBAR ==================== */
+    .ds-sidebar-toggle {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1001;
+    }
+
+    .ds-sidebar {
+        position: fixed;
+        top: 0;
+        left: -220px;
+        width: 220px;
+        height: 100vh;
+        background: var(--ds-card-bg);
+        border-right: 3px solid var(--ds-border);
+        z-index: 1000;
+        transition: left 0.3s ease;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.2);
+    }
+
+    .ds-sidebar.open {
+        left: 0;
+    }
+
+    .ds-sidebar-header {
+        padding: 16px;
+        background: var(--ds-header-bg);
+        color: #fff;
+        font-size: 10px;
+        border-bottom: 2px solid var(--ds-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ds-sidebar-close {
+        background: none;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 4px;
+    }
+
+    .ds-sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .ds-sidebar-menu li {
+        border-bottom: 1px solid var(--ds-border);
+    }
+
+    .ds-sidebar-menu a {
+        display: flex;
+        align-items: center;
+        padding: 14px 16px;
+        color: var(--ds-text);
+        text-decoration: none;
+        font-size: 9px;
+        gap: 10px;
+        transition: background 0.2s;
+    }
+
+    .ds-sidebar-menu a:hover {
+        background: var(--ds-screen-bg);
+    }
+
+    .ds-sidebar-menu a i {
+        width: 20px;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .ds-sidebar-badge {
+        background: var(--ds-error);
+        color: #fff;
+        font-size: 7px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        margin-left: auto;
+    }
+
+    .ds-sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: none;
+    }
+
+    .ds-sidebar-overlay.show {
+        display: block;
+    }
+
+    @media (max-width: 480px) {
+        .ds-sidebar {
+            width: 200px;
+            left: -200px;
+        }
+        
+        .ds-sidebar-menu a {
+            padding: 12px 14px;
+            font-size: 8px;
+        }
+    }
+
     .ds-music-toggle .ds-btn {
         position: relative;
     }
@@ -1325,6 +1437,63 @@
 </head>
 <body>
 
+    <!-- Sidebar Toggle -->
+    {% if current_user.is_authenticated %}
+    <div class="ds-sidebar-toggle">
+        <button id="sidebar-toggle" class="ds-btn ds-btn-sm ds-btn-outline" title="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="ds-sidebar-overlay"></div>
+
+    <!-- Left Sidebar -->
+    <nav id="sidebar" class="ds-sidebar">
+        <div class="ds-sidebar-header">
+            <span><i class="fas fa-gamepad"></i> MENU</span>
+            <button id="sidebar-close" class="ds-sidebar-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ul class="ds-sidebar-menu">
+            <li>
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Pubblica</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('messages.inbox') }}">
+                    <i class="fas fa-envelope"></i>
+                    <span>Messaggi Privati</span>
+                    <span id="pm-badge" class="ds-sidebar-badge" style="display: none;">0</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('main.profile') }}">
+                    <i class="fas fa-user"></i>
+                    <span>Profilo</span>
+                </a>
+            </li>
+            {% if current_user.is_admin %}
+            <li>
+                <a href="{{ url_for('admin.dashboard') }}">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Admin</span>
+                </a>
+            </li>
+            {% endif %}
+            <li>
+                <a href="{{ url_for('auth.logout') }}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Esci</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
     <!-- Music Toggle -->
     <div class="ds-music-toggle">
         <button id="music-toggle" class="ds-btn ds-btn-sm ds-btn-outline" title="Musica di sottofondo">
@@ -1436,6 +1605,56 @@
             }
         });
     </script>
+
+    {% if current_user.is_authenticated %}
+    <script>
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const pmBadge = document.getElementById('pm-badge');
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('show');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('show');
+        }
+
+        sidebarToggle.addEventListener('click', openSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSidebar();
+        });
+
+        // Update unread message count
+        async function updateUnreadCount() {
+            try {
+                const res = await fetch('/messages/unread_count');
+                const data = await res.json();
+                if (data.count > 0) {
+                    pmBadge.textContent = data.count;
+                    pmBadge.style.display = 'inline';
+                } else {
+                    pmBadge.style.display = 'none';
+                }
+            } catch (err) {
+                // Ignore errors
+            }
+        }
+
+        // Check unread count on load and periodically
+        updateUnreadCount();
+        setInterval(updateUnreadCount, 10000);
+    </script>
+    {% endif %}
 
     {% block extra_scripts %}{% endblock %}
 </body>

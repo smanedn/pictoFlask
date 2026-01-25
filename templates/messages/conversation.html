@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}PictoFlask - Chat con {{ other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="ds-container">
+    <div class="ds-screen">
+        <div class="ds-screen-inner">
+            <!-- Header -->
+            <div class="ds-header">
+                <div class="ds-flex" style="align-items: center; gap: 10px;">
+                    <a href="{{ url_for('messages.inbox') }}" class="ds-back-btn" title="Torna alla inbox">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <a href="{{ url_for('main.public_profile', username=other_user.username) }}" class="ds-chat-user-info">
+                        <img src="{{ url_for('main.uploaded_file', filename=other_user.profile_pic) }}" class="ds-chat-user-avatar" alt="{{ other_user.username }}">
+                        <span class="ds-chat-user-name">{{ other_user.username }}</span>
+                    </a>
+                </div>
+                <div class="ds-nav-links">
+                    <a href="{{ url_for('main.index') }}" title="Chat">
+                        <i class="fas fa-comments"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="pmChat" class="ds-pm-chat-area">
+                {% if messages %}
+                    {% for msg in messages %}
+                    <div class="ds-pm-message {% if msg.sender_id == current_user.id %}ds-pm-mine{% endif %}">
+                        <div class="ds-pm-bubble">
+                            <div class="ds-pm-text">{{ msg.content }}</div>
+                            <div class="ds-pm-time">{{ msg.timestamp.strftime('%H:%M') }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="ds-pm-empty">
+                        <i class="fas fa-paper-plane"></i>
+                        <p>Inizia la conversazione!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Input Area -->
+            <form id="pmForm" class="ds-input-area">
+                <div class="ds-input-wrapper">
+                    <input type="text" id="pmInput" class="ds-input" placeholder="Scrivi un messaggio..." autocomplete="off" maxlength="500" required>
+                </div>
+                <button class="ds-btn ds-btn-primary" type="submit">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.ds-back-btn {
+    color: #fff;
+    text-decoration: none;
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.ds-back-btn:hover {
+    opacity: 0.8;
+}
+
+.ds-chat-user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #fff;
+}
+
+.ds-chat-user-info:hover {
+    opacity: 0.9;
+}
+
+.ds-chat-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 2px;
+    border: 2px solid rgba(255,255,255,0.3);
+    object-fit: cover;
+}
+
+.ds-chat-user-name {
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.ds-pm-chat-area {
+    height: 55vh;
+    height: 55dvh;
+    min-height: 280px;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px;
+    background: var(--ds-screen-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ds-pm-message {
+    display: flex;
+    max-width: 80%;
+}
+
+.ds-pm-mine {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.ds-pm-bubble {
+    padding: 10px 14px;
+    border: 2px solid var(--ds-border);
+    border-radius: 2px;
+    background: var(--ds-bubble-other);
+}
+
+.ds-pm-mine .ds-pm-bubble {
+    background: var(--ds-bubble-my);
+    color: #fff;
+}
+
+.ds-pm-text {
+    font-size: 9px;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.ds-pm-time {
+    font-size: 7px;
+    opacity: 0.7;
+    margin-top: 6px;
+    text-align: right;
+}
+
+.ds-pm-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--ds-text-muted);
+    text-align: center;
+}
+
+.ds-pm-empty i {
+    font-size: 28px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.ds-pm-empty p {
+    font-size: 9px;
+}
+
+@media (max-width: 480px) {
+    .ds-chat-user-avatar {
+        width: 26px;
+        height: 26px;
+    }
+    
+    .ds-chat-user-name {
+        font-size: 8px;
+    }
+    
+    .ds-pm-chat-area {
+        height: 50vh;
+        min-height: 250px;
+        max-height: 400px;
+    }
+    
+    .ds-pm-message {
+        max-width: 85%;
+    }
+    
+    .ds-pm-bubble {
+        padding: 8px 10px;
+    }
+    
+    .ds-pm-text {
+        font-size: 8px;
+    }
+}
+</style>
+
+<script>
+const pmChat = document.getElementById('pmChat');
+const pmForm = document.getElementById('pmForm');
+const pmInput = document.getElementById('pmInput');
+const otherUserId = {{ other_user.id }};
+
+// Scroll to bottom on load
+pmChat.scrollTop = pmChat.scrollHeight;
+
+// Send message
+pmForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = pmInput.value.trim();
+    if (!content) return;
+
+    const formData = new FormData();
+    formData.append('content', content);
+
+    try {
+        const res = await fetch(`/messages/send/${otherUserId}`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            // Add message to chat
+            addMessage(data.message, true);
+            pmInput.value = '';
+            
+            // Remove empty state if present
+            const emptyState = pmChat.querySelector('.ds-pm-empty');
+            if (emptyState) emptyState.remove();
+        } else {
+            alert(data.error || 'Errore nell\'invio del messaggio');
+        }
+    } catch (err) {
+        console.error('Error sending message:', err);
+        alert('Errore di connessione');
+    }
+});
+
+function addMessage(msg, isMine) {
+    const div = document.createElement('div');
+    div.className = 'ds-pm-message' + (isMine ? ' ds-pm-mine' : '');
+    div.innerHTML = `
+        <div class="ds-pm-bubble">
+            <div class="ds-pm-text">${escapeHtml(msg.content)}</div>
+            <div class="ds-pm-time">${msg.timestamp}</div>
+        </div>
+    `;
+    pmChat.appendChild(div);
+    pmChat.scrollTop = pmChat.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Poll for new messages every 3 seconds
+setInterval(async () => {
+    try {
+        const res = await fetch(window.location.href);
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newMessages = doc.querySelectorAll('.ds-pm-message');
+        const currentMessages = pmChat.querySelectorAll('.ds-pm-message');
+        
+        if (newMessages.length > currentMessages.length) {
+            // New messages received - reload to get them
+            const wasAtBottom = pmChat.scrollHeight - pmChat.scrollTop - pmChat.clientHeight < 100;
+            
+            // Get the new messages and append them
+            for (let i = currentMessages.length; i < newMessages.length; i++) {
+                pmChat.appendChild(newMessages[i].cloneNode(true));
+            }
+            
+            if (wasAtBottom) {
+                pmChat.scrollTop = pmChat.scrollHeight;
+            }
+        }
+    } catch (err) {
+        // Ignore polling errors
+    }
+}, 3000);
+</script>
+{% endblock %}

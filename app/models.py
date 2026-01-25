@@ -6,7 +6,6 @@ import secrets
 from .extensions import db
 
 
-# Default PictoFlask colors
 PICTOFLASK_COLORS = [
     '#61829a', '#ba4900', '#fb0018', '#fb8afb',
     '#fb9200', '#f3e300', '#aafb00', '#00fb00',
@@ -20,7 +19,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     profile_pic = db.Column(db.String(120), default='default.jpg')
-    chat_color = db.Column(db.String(7), default='#61829a')  # Hex color for messages
+    chat_color = db.Column(db.String(7), default='#61829a')
     registered_on = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_username_change = db.Column(db.DateTime, nullable=True)
     message_count = db.Column(db.Integer, default=0)
@@ -55,3 +54,18 @@ class Message(db.Model):
 
     def __repr__(self) -> str:
         return f'<Message {self.username}: {self.content[:30]}...>'
+
+
+class PrivateMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    is_read = db.Column(db.Boolean, default=False)
+
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref='received_messages')
+
+    def __repr__(self) -> str:
+        return f'<PrivateMessage {self.sender_id} -> {self.recipient_id}>'

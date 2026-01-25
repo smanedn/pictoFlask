@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}PictoFlask - Messaggi Privati{% endblock %}
+
+{% block content %}
+<div class="ds-container">
+    <div class="ds-screen">
+        <div class="ds-screen-inner">
+            <!-- Header -->
+            <div class="ds-header">
+                <h1>
+                    <i class="fas fa-envelope ds-header-icon"></i>MESSAGGI
+                </h1>
+                <div class="ds-nav-links">
+                    <a href="{{ url_for('main.index') }}" title="Chat">
+                        <i class="fas fa-comments"></i> <span class="nav-text">CHAT</span>
+                    </a>
+                    <a href="{{ url_for('main.profile') }}" title="Profilo">
+                        <i class="fas fa-user"></i> <span class="nav-text">PROFILO</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Conversations List -->
+            <div class="ds-messages-list">
+                {% if conversations %}
+                    {% for conv in conversations %}
+                    <a href="{{ url_for('messages.conversation', user_id=conv.user.id) }}" class="ds-conversation-item {% if conv.unread_count > 0 %}unread{% endif %}">
+                        <img src="{{ url_for('main.uploaded_file', filename=conv.user.profile_pic) }}" class="ds-conv-avatar" alt="{{ conv.user.username }}">
+                        <div class="ds-conv-info">
+                            <div class="ds-conv-header">
+                                <span class="ds-conv-username">{{ conv.user.username }}</span>
+                                <span class="ds-conv-time">{{ conv.last_message.timestamp.strftime('%d/%m %H:%M') }}</span>
+                            </div>
+                            <div class="ds-conv-preview">
+                                {% if conv.last_message.sender_id == current_user.id %}
+                                    <span class="ds-conv-you">Tu: </span>
+                                {% endif %}
+                                {{ conv.last_message.content[:40] }}{% if conv.last_message.content|length > 40 %}...{% endif %}
+                            </div>
+                        </div>
+                        {% if conv.unread_count > 0 %}
+                        <span class="ds-unread-badge">{{ conv.unread_count }}</span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="ds-empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Nessun messaggio</p>
+                        <span class="ds-hint">Visita il profilo di un utente per inviargli un messaggio</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.ds-messages-list {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.ds-conversation-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ds-border);
+    text-decoration: none;
+    color: var(--ds-text);
+    transition: background-color 0.2s;
+    gap: 12px;
+}
+
+.ds-conversation-item:hover {
+    background: var(--ds-screen-bg);
+}
+
+.ds-conversation-item.unread {
+    background: rgba(74, 144, 217, 0.1);
+}
+
+.ds-conv-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 2px;
+    border: 2px solid var(--ds-border);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.ds-conv-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ds-conv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.ds-conv-username {
+    font-size: 9px;
+    font-weight: bold;
+}
+
+.ds-conv-time {
+    font-size: 7px;
+    color: var(--ds-text-muted);
+}
+
+.ds-conv-preview {
+    font-size: 8px;
+    color: var(--ds-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ds-conv-you {
+    color: var(--ds-accent);
+}
+
+.ds-unread-badge {
+    background: var(--ds-accent);
+    color: #fff;
+    font-size: 7px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.ds-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ds-text-muted);
+}
+
+.ds-empty-state i {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.ds-empty-state p {
+    font-size: 10px;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 480px) {
+    .ds-conversation-item {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    
+    .ds-conv-avatar {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .ds-conv-username {
+        font-size: 8px;
+    }
+    
+    .ds-conv-time {
+        font-size: 6px;
+    }
+    
+    .ds-conv-preview {
+        font-size: 7px;
+    }
+}
+</style>
+{% endblock %}

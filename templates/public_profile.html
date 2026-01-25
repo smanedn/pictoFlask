@@ -50,7 +50,11 @@
                         </form>
                     </div>
                 {% else %}
-                    <p class="ds-text-muted ds-text-sm ds-mt-2">Profilo pubblico di un altro utente.</p>
+                    <div class="ds-mt-2">
+                        <a href="{{ url_for('messages.conversation', user_id=profile_user.id) }}" class="ds-btn ds-btn-primary">
+                            <i class="fas fa-envelope"></i> INVIA MESSAGGIO
+                        </a>
+                    </div>
                 {% endif %}
 
                 <hr class="ds-divider">
