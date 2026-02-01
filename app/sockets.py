@@ -4,8 +4,17 @@ from flask_socketio import emit, join_room
 from flask_login import current_user, login_required
 
 from .extensions import db, socketio
-from .models import Message, PrivateMessage
+from .models import Message, PrivateMessage, BlockedUser, User
 from .utils import check_rate_limit
+
+
+def is_blocked(user_id, target_id):
+    return BlockedUser.query.filter_by(blocker_id=target_id, blocked_id=user_id).first() is not None
+
+
+def get_blocked_ids(user_id):
+    blocked = BlockedUser.query.filter_by(blocker_id=user_id).all()
+    return {b.blocked_id for b in blocked}
 
 ROOM = "main_chat"
 online_users = {}
@@ -88,6 +97,7 @@ def handle_message(data):
     current_user.message_count += 1
 
     new_message = Message(
+        user_id=current_user.id,
         username=current_user.username,
         content=msg,
         profile_pic=current_user.profile_pic
@@ -103,6 +113,8 @@ def handle_message(data):
         return
 
     emit('message', {
+        'id': new_message.id,
+        'user_id': current_user.id,
         'username': current_user.username,
         'msg': msg,
         'time': datetime.now(timezone.utc).strftime("%H:%M"),
@@ -155,3 +167,28 @@ def notify_private_message(recipient_id, sender_username):
     emit('pm_notification', {
         'sender': sender_username
     }, room=f"user_{recipient_id}", namespace='/')
+
+
+@socketio.on('delete_message')
+@login_required
+def handle_delete_message(data):
+    message_id = data.get('message_id')
+    if not message_id:
+        return
+    
+    message = Message.query.get(message_id)
+    if not message:
+        emit('status', {'msg': 'Messaggio non trovato'}, to=request.sid)
+        return
+    
+    if message.user_id != current_user.id and not current_user.is_admin:
+        emit('status', {'msg': 'Non puoi eliminare questo messaggio'}, to=request.sid)
+        return
+    
+    try:
+        db.session.delete(message)
+        db.session.commit()
+        emit('message_deleted', {'message_id': message_id}, room=ROOM)
+    except Exception as e:
+        db.session.rollback()
+        emit('status', {'msg': 'Errore durante l\'eliminazione'}, to=request.sid)

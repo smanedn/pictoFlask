@@ -24,6 +24,8 @@ Built with Flask, Socket.IO, and authentic Nintendo DS styling
 - Message bubbles with authentic DS styling
 - Last 100 messages loaded on connect
 - Smooth scrolling and animations
+- Message deletion (own messages + admin)
+- Emoji picker with 24 popular emojis
 
 ### 👤 **User System**
 - Secure registration and login
@@ -38,6 +40,7 @@ Built with Flask, Socket.IO, and authentic Nintendo DS styling
 - Unread message badges
 - Real-time notifications
 - Left sidebar menu for quick access
+- Blocked users cannot message you
 
 ### 🎮 **Nintendo DS Aesthetic**
 - Authentic PictoChat visual design
@@ -60,6 +63,7 @@ Built with Flask, Socket.IO, and authentic Nintendo DS styling
 - Session management
 - CSRF protection
 - Efficient WebSocket handling
+- User blocking system
 
 ### 👑 **Admin Panel**
 - Admin dashboard with statistics
@@ -206,7 +210,7 @@ pictoFlask/
 │   ├── __init__.py          # Application factory
 │   ├── config.py            # Configuration settings
 │   ├── extensions.py        # Flask extensions (DB, Login, SocketIO)
-│   ├── models.py            # Database models (User, Message, PrivateMessage)
+│   ├── models.py            # Database models (User, Message, PrivateMessage, BlockedUser)
 │   ├── sockets.py           # WebSocket event handlers
 │   ├── utils.py             # Utility functions
 │   └── routes/
@@ -263,6 +267,8 @@ pictoFlask/
 | Feature | How to Use |
 |---------|------------|
 | **Send Message** | Type in the input box and press Enter or click Send |
+| **Add Emoji** | Click 😀 button next to input to open emoji picker |
+| **Delete Message** | Hover over your message, click X button |
 | **Theme Toggle** | Click 🌙 button (top-right) for dark/light mode |
 | **Music Toggle** | Click 🔊 button (top-right) for background music |
 | **Open Menu** | Click ☰ button (top-left) for sidebar menu |
@@ -299,6 +305,8 @@ pictoFlask/
 | GET | `/messages/conversation/<user_id>` | Conversation with user |
 | POST | `/messages/send/<user_id>` | Send private message |
 | GET | `/messages/unread_count` | Get unread count (API) |
+| POST | `/block/<user_id>` | Block a user |
+| POST | `/unblock/<user_id>` | Unblock a user |
 
 ### WebSocket Events
 
@@ -314,17 +322,19 @@ pictoFlask/
 | `private_message` | Client → Server | Send private message |
 | `pm_sent` | Server → Client | Private message sent confirmation |
 | `pm_received` | Server → Client | New private message received |
+| `delete_message` | Client → Server | Delete a message |
+| `message_deleted` | Server → Client | Message was deleted |
 
 ## 🎯 Roadmap
 
 - [x] Private messaging
-- [ ] Message editing/deletion
+- [x] Message deletion
 - [ ] Drawing canvas (like real PictoChat!)
 - [ ] Multiple chat rooms
 - [ ] Image/file sharing
-- [ ] Emoji picker
+- [x] Emoji picker
 - [ ] Message search
-- [ ] User blocking
+- [x] User blocking
 - [x] Admin panel
 - [ ] Mobile app (React Native)
 

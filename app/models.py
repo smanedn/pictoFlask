@@ -47,6 +47,7 @@ class User(UserMixin, db.Model):
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
     username = db.Column(db.String(80), nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     profile_pic = db.Column(db.String(120), default='default.jpg')
@@ -69,3 +70,18 @@ class PrivateMessage(db.Model):
 
     def __repr__(self) -> str:
         return f'<PrivateMessage {self.sender_id} -> {self.recipient_id}>'
+
+
+class BlockedUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    blocker_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    blocked_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    blocker = db.relationship('User', foreign_keys=[blocker_id], backref='blocking')
+    blocked = db.relationship('User', foreign_keys=[blocked_id], backref='blocked_by')
+
+    __table_args__ = (db.UniqueConstraint('blocker_id', 'blocked_id'),)
+
+    def __repr__(self) -> str:
+        return f'<BlockedUser {self.blocker_id} blocked {self.blocked_id}>'

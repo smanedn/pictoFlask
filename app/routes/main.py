@@ -8,7 +8,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 
 from ..extensions import db
-from ..models import User, Message, PICTOFLASK_COLORS
+from ..models import User, Message, BlockedUser, PICTOFLASK_COLORS
 from ..utils import allowed_file
 import re
 
@@ -20,16 +20,17 @@ main_bp = Blueprint('main', __name__)
 def index():
     session['session_token'] = current_user.session_token
 
-    # Load last 100 messages
+    blocked_ids = {b.blocked_id for b in BlockedUser.query.filter_by(blocker_id=current_user.id).all()}
     messages = Message.query.order_by(Message.timestamp.asc()).limit(100).all()
     
-    # Get user colors for message history
     usernames = list(set(msg.username for msg in messages))
     users = User.query.filter(User.username.in_(usernames)).all()
     user_colors = {u.username: u.chat_color or '#61829a' for u in users}
 
     history_list = [
         {
+            'id': msg.id,
+            'user_id': msg.user_id,
             'username': msg.username,
             'msg': msg.content,
             'time': msg.timestamp.strftime("%H:%M"),
@@ -37,6 +38,7 @@ def index():
             'color': user_colors.get(msg.username, '#61829a')
         }
         for msg in messages
+        if msg.user_id not in blocked_ids
     ]
 
     history_json = json.dumps(history_list, ensure_ascii=False)
@@ -44,7 +46,8 @@ def index():
     return render_template(
         'index.html', 
         history_json=history_json,
-        current_user_color=current_user.chat_color or '#61829a'
+        current_user_color=current_user.chat_color or '#61829a',
+        is_admin=current_user.is_admin
     )
 
 
@@ -138,6 +141,10 @@ def profile():
 def public_profile(username):
     user = User.query.filter_by(username=username.lower()).first_or_404()
     is_own_profile = (user.id == current_user.id)
+    is_blocked = BlockedUser.query.filter_by(
+        blocker_id=current_user.id, 
+        blocked_id=user.id
+    ).first() is not None
 
     days_until_next_change = None
     if user.last_username_change:
@@ -149,8 +156,60 @@ def public_profile(username):
         'public_profile.html',
         profile_user=user,
         is_own_profile=is_own_profile,
+        is_blocked=is_blocked,
         days_until_next_change=days_until_next_change
     )
+
+
+@main_bp.route('/block/<int:user_id>', methods=['POST'])
+@login_required
+def block_user(user_id):
+    if user_id == current_user.id:
+        flash('Non puoi bloccare te stesso!', 'warning')
+        return redirect(request.referrer or url_for('main.index'))
+    
+    user = User.query.get_or_404(user_id)
+    existing = BlockedUser.query.filter_by(
+        blocker_id=current_user.id,
+        blocked_id=user_id
+    ).first()
+    
+    if existing:
+        flash('Utente già bloccato!', 'warning')
+    else:
+        block = BlockedUser(blocker_id=current_user.id, blocked_id=user_id)
+        db.session.add(block)
+        try:
+            db.session.commit()
+            flash(f'{user.username} è stato bloccato.', 'success')
+        except:
+            db.session.rollback()
+            flash('Errore durante il blocco.', 'danger')
+    
+    return redirect(url_for('main.public_profile', username=user.username))
+
+
+@main_bp.route('/unblock/<int:user_id>', methods=['POST'])
+@login_required
+def unblock_user(user_id):
+    user = User.query.get_or_404(user_id)
+    block = BlockedUser.query.filter_by(
+        blocker_id=current_user.id,
+        blocked_id=user_id
+    ).first()
+    
+    if block:
+        db.session.delete(block)
+        try:
+            db.session.commit()
+            flash(f'{user.username} è stato sbloccato.', 'success')
+        except:
+            db.session.rollback()
+            flash('Errore durante lo sblocco.', 'danger')
+    else:
+        flash('Utente non bloccato!', 'warning')
+    
+    return redirect(url_for('main.public_profile', username=user.username))
 
 
 @main_bp.route('/uploads/profiles/<filename>')

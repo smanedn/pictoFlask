@@ -50,10 +50,18 @@
                         </form>
                     </div>
                 {% else %}
-                    <div class="ds-mt-2">
+                    <div class="ds-mt-2 ds-flex ds-flex-col ds-gap-1" style="align-items: center;">
+                        {% if not is_blocked %}
                         <a href="{{ url_for('messages.conversation', user_id=profile_user.id) }}" class="ds-btn ds-btn-primary">
                             <i class="fas fa-envelope"></i> INVIA MESSAGGIO
                         </a>
+                        {% endif %}
+                        <form method="post" action="{{ url_for('main.block_user' if not is_blocked else 'main.unblock_user', user_id=profile_user.id) }}" style="margin: 0;">
+                            <button type="submit" class="ds-btn {{ 'ds-btn-outline' if is_blocked else 'ds-btn-danger' }} ds-btn-sm">
+                                <i class="fas fa-{{ 'unlock' if is_blocked else 'ban' }}"></i>
+                                {{ 'SBLOCCA' if is_blocked else 'BLOCCA' }}
+                            </button>
+                        </form>
                     </div>
                 {% endif %}
 

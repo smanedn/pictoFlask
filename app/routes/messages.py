@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import or_, and_, func
 
 from ..extensions import db
-from ..models import User, PrivateMessage
+from ..models import User, PrivateMessage, BlockedUser
 
 messages_bp = Blueprint('messages', __name__, url_prefix='/messages')
 
@@ -70,6 +70,14 @@ def conversation(user_id):
     if other_user.id == current_user.id:
         flash('Non puoi inviare messaggi a te stesso!', 'warning')
         return redirect(url_for('messages.inbox'))
+    
+    is_blocked_by = BlockedUser.query.filter_by(
+        blocker_id=user_id, blocked_id=current_user.id
+    ).first() is not None
+    
+    if is_blocked_by:
+        flash('Non puoi inviare messaggi a questo utente.', 'danger')
+        return redirect(url_for('messages.inbox'))
 
     messages = PrivateMessage.query.filter(
         or_(
@@ -106,6 +114,16 @@ def send_message(user_id):
     
     if other_user.id == current_user.id:
         return jsonify({'success': False, 'error': 'Non puoi inviare messaggi a te stesso'}), 400
+    
+    is_blocked = BlockedUser.query.filter(
+        or_(
+            and_(BlockedUser.blocker_id == current_user.id, BlockedUser.blocked_id == user_id),
+            and_(BlockedUser.blocker_id == user_id, BlockedUser.blocked_id == current_user.id)
+        )
+    ).first() is not None
+    
+    if is_blocked:
+        return jsonify({'success': False, 'error': 'Non puoi inviare messaggi a questo utente'}), 403
 
     content = request.form.get('content', '').strip()[:500]
     if not content:

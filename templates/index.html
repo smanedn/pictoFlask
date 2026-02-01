@@ -59,6 +59,9 @@
 
             <!-- Input Area (Bottom Screen) -->
             <form id="form" class="ds-input-area">
+                <button type="button" id="emojiBtn" class="ds-btn ds-btn-outline" title="Emoji">
+                    <i class="fas fa-smile"></i>
+                </button>
                 <div class="ds-input-wrapper">
                     <input type="text" id="input" class="ds-input" placeholder="Scrivi..." autocomplete="off" maxlength="500" required>
                     <div id="charCounter" class="ds-char-counter">0/500</div>
@@ -67,10 +70,106 @@
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </form>
+
+            <!-- Emoji Picker -->
+            <div id="emojiPicker" class="ds-emoji-picker" style="display: none;">
+                <div class="ds-emoji-grid">
+                    <span class="ds-emoji" data-emoji="😀">😀</span>
+                    <span class="ds-emoji" data-emoji="😂">😂</span>
+                    <span class="ds-emoji" data-emoji="😍">😍</span>
+                    <span class="ds-emoji" data-emoji="🥰">🥰</span>
+                    <span class="ds-emoji" data-emoji="😎">😎</span>
+                    <span class="ds-emoji" data-emoji="🤔">🤔</span>
+                    <span class="ds-emoji" data-emoji="😢">😢</span>
+                    <span class="ds-emoji" data-emoji="😡">😡</span>
+                    <span class="ds-emoji" data-emoji="👍">👍</span>
+                    <span class="ds-emoji" data-emoji="👎">👎</span>
+                    <span class="ds-emoji" data-emoji="❤️">❤️</span>
+                    <span class="ds-emoji" data-emoji="🔥">🔥</span>
+                    <span class="ds-emoji" data-emoji="✨">✨</span>
+                    <span class="ds-emoji" data-emoji="🎉">🎉</span>
+                    <span class="ds-emoji" data-emoji="👀">👀</span>
+                    <span class="ds-emoji" data-emoji="🙏">🙏</span>
+                    <span class="ds-emoji" data-emoji="💀">💀</span>
+                    <span class="ds-emoji" data-emoji="🤡">🤡</span>
+                    <span class="ds-emoji" data-emoji="😈">😈</span>
+                    <span class="ds-emoji" data-emoji="👻">👻</span>
+                    <span class="ds-emoji" data-emoji="🎮">🎮</span>
+                    <span class="ds-emoji" data-emoji="💬">💬</span>
+                    <span class="ds-emoji" data-emoji="⭐">⭐</span>
+                    <span class="ds-emoji" data-emoji="🌙">🌙</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<style>
+.ds-emoji-picker {
+    position: absolute;
+    bottom: 70px;
+    left: 10px;
+    background: var(--ds-card-bg);
+    border: 2px solid var(--ds-border);
+    border-radius: 4px;
+    padding: 8px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.ds-emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+}
+.ds-emoji {
+    font-size: 18px;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: center;
+    transition: background 0.2s;
+}
+.ds-emoji:hover {
+    background: var(--ds-screen-bg);
+}
+.ds-delete-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--ds-error);
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ds-bubble {
+    position: relative;
+}
+.ds-bubble:hover .ds-delete-btn {
+    opacity: 1;
+}
+@media (max-width: 480px) {
+    .ds-emoji-picker {
+        left: 5px;
+        bottom: 60px;
+    }
+    .ds-emoji-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    .ds-emoji {
+        font-size: 16px;
+        padding: 3px;
+    }
+}
+</style>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
     // ==================== SOUND EFFECTS ====================
@@ -103,6 +202,10 @@
     const connectionText = document.getElementById('connectionText');
     const currentUsername = '{{ current_user.username }}';
     const currentUserColor = '{{ current_user_color }}';
+    const currentUserId = {{ current_user.id }};
+    const isAdmin = {{ 'true' if is_admin else 'false' }};
+    const emojiPicker = document.getElementById('emojiPicker');
+    const emojiBtn = document.getElementById('emojiBtn');
     
     // ==================== UNREAD MESSAGES ====================
     let unreadCount = 0;
@@ -123,6 +226,27 @@
             document.title = `(${unreadCount}) ${originalTitle}`;
         }
     }
+
+    // ==================== EMOJI PICKER ====================
+    emojiBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('.ds-emoji').forEach(emoji => {
+        emoji.addEventListener('click', () => {
+            input.value += emoji.dataset.emoji;
+            input.focus();
+            emojiPicker.style.display = 'none';
+            input.dispatchEvent(new Event('input'));
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+            emojiPicker.style.display = 'none';
+        }
+    });
 
     // ==================== CHARACTER COUNTER ====================
     input.addEventListener('input', () => {
@@ -204,17 +328,21 @@
             div.textContent = data.msg;
         } else {
             const isMe = data.username === currentUsername;
+            const canDelete = (data.user_id === currentUserId) || isAdmin;
             div.className = 'ds-message' + (isMe ? ' ds-message-mine' : '');
+            if (data.id) div.setAttribute('data-message-id', data.id);
 
             const picUrl = `/uploads/profiles/${data.profile_pic || 'default.jpg'}`;
             const profileUrl = `/user/${encodeURIComponent(data.username)}`;
             const bubbleColor = data.color || '#61829a';
+            const deleteBtn = canDelete && data.id ? `<button class="ds-delete-btn" onclick="deleteMessage(${data.id})" title="Elimina"><i class="fas fa-times"></i></button>` : '';
 
             div.innerHTML = `
                 <a href="${profileUrl}" title="Profilo di ${data.username}">
                     <img src="${picUrl}" class="ds-avatar" alt="${data.username}">
                 </a>
                 <div class="ds-bubble" style="background-color: ${isMe ? bubbleColor : ''};">
+                    ${deleteBtn}
                     <a href="${profileUrl}" class="ds-message-username" style="text-decoration:none;color:${isMe ? 'rgba(255,255,255,0.8)' : bubbleColor};">
                         ${data.username}
                     </a>
@@ -231,6 +359,20 @@
             chat.scrollTop = chat.scrollHeight;
         }
     }
+
+    function deleteMessage(messageId) {
+        if (confirm('Eliminare questo messaggio?')) {
+            socket.emit('delete_message', { message_id: messageId });
+        }
+    }
+
+    socket.on('message_deleted', (data) => {
+        const msgEl = document.querySelector(`[data-message-id="${data.message_id}"]`);
+        if (msgEl) {
+            msgEl.style.opacity = '0';
+            setTimeout(() => msgEl.remove(), 300);
+        }
+    });
     
     function escapeHtml(text) {
         const div = document.createElement('div');
