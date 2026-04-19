@@ -17,7 +17,7 @@ PICTOFLASK_COLORS = [
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
     profile_pic = db.Column(db.String(120), default='default.jpg')
     chat_color = db.Column(db.String(7), default='#61829a')
     registered_on = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -35,7 +35,10 @@ class User(UserMixin, db.Model):
     def can_change_username(self) -> bool:
         if self.last_username_change is None:
             return True
-        delta = datetime.now(timezone.utc) - self.last_username_change
+        last = self.last_username_change
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        delta = datetime.now(timezone.utc) - last
         return delta.days >= 30
 
     def refresh_session_token(self) -> None:
@@ -52,6 +55,8 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=False)
     profile_pic = db.Column(db.String(120), default='default.jpg')
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    # Optional base64-encoded PNG for drawing canvas messages
+    image_data = db.Column(db.Text, nullable=True)
 
     def __repr__(self) -> str:
         return f'<Message {self.username}: {self.content[:30]}...>'

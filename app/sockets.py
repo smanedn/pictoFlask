@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, timezone
 from flask import session, request
 from flask_socketio import emit, join_room
@@ -6,6 +7,9 @@ from flask_login import current_user, login_required
 from .extensions import db, socketio
 from .models import Message, PrivateMessage, BlockedUser, User
 from .utils import check_rate_limit
+
+# Max size for a drawing canvas image (base64 PNG, ~300 KB raw ≈ 400 KB b64)
+_MAX_IMAGE_B64 = 450_000
 
 
 def is_blocked(user_id, target_id):
@@ -123,6 +127,57 @@ def handle_message(data):
     }, room=ROOM)
 
 
+@socketio.on('draw_message')
+@login_required
+def handle_draw_message(data):
+    """Send a canvas drawing as a message."""
+    if not check_rate_limit(current_user.id):
+        emit('status', {'msg': "Aspetta un attimo tra un messaggio e l'altro"}, to=request.sid)
+        return
+
+    image_data = data.get('image_data', '')
+
+    # Basic validation: must be a data URL PNG/JPEG
+    if not image_data or not image_data.startswith('data:image/'):
+        emit('status', {'msg': 'Immagine non valida'}, to=request.sid)
+        return
+
+    # Size guard (prevent huge payloads)
+    if len(image_data) > _MAX_IMAGE_B64:
+        emit('status', {'msg': 'Immagine troppo grande'}, to=request.sid)
+        return
+
+    current_user.message_count += 1
+
+    new_message = Message(
+        user_id=current_user.id,
+        username=current_user.username,
+        content='[Disegno]',
+        profile_pic=current_user.profile_pic,
+        image_data=image_data
+    )
+    db.session.add(new_message)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERRORE SALVATAGGIO DISEGNO] {str(e)}")
+        emit('status', {'msg': 'Errore nel salvataggio del disegno'}, to=request.sid)
+        return
+
+    emit('message', {
+        'id': new_message.id,
+        'user_id': current_user.id,
+        'username': current_user.username,
+        'msg': '[Disegno]',
+        'time': datetime.now(timezone.utc).strftime("%H:%M"),
+        'profile_pic': current_user.profile_pic,
+        'color': current_user.chat_color or '#61829a',
+        'image_data': image_data
+    }, room=ROOM)
+
+
 @socketio.on('private_message')
 @login_required
 def handle_private_message(data):
@@ -176,7 +231,7 @@ def handle_delete_message(data):
     if not message_id:
         return
     
-    message = Message.query.get(message_id)
+    message = db.session.get(Message, message_id)
     if not message:
         emit('status', {'msg': 'Messaggio non trovato'}, to=request.sid)
         return
@@ -191,4 +246,4 @@ def handle_delete_message(data):
         emit('message_deleted', {'message_id': message_id}, room=ROOM)
     except Exception as e:
         db.session.rollback()
-        emit('status', {'msg': 'Errore durante l\'eliminazione'}, to=request.sid)
+        emit('status', {'msg': "Errore durante l'eliminazione"}, to=request.sid)

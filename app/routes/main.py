@@ -35,7 +35,8 @@ def index():
             'msg': msg.content,
             'time': msg.timestamp.strftime("%H:%M"),
             'profile_pic': msg.profile_pic,
-            'color': user_colors.get(msg.username, '#61829a')
+            'color': user_colors.get(msg.username, '#61829a'),
+            'image_data': msg.image_data or None
         }
         for msg in messages
         if msg.user_id not in blocked_ids
@@ -64,7 +65,10 @@ def check_session():
 def profile():
     days_until_next_change = None
     if current_user.last_username_change:
-        delta = datetime.now(timezone.utc) - current_user.last_username_change
+        last = current_user.last_username_change
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        delta = datetime.now(timezone.utc) - last
         days_passed = delta.days
         days_until_next_change = max(0, 30 - days_passed)
 
@@ -148,7 +152,10 @@ def public_profile(username):
 
     days_until_next_change = None
     if user.last_username_change:
-        delta = datetime.now(timezone.utc) - user.last_username_change
+        last = user.last_username_change
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        delta = datetime.now(timezone.utc) - last
         days_passed = delta.days
         days_until_next_change = max(0, 30 - days_passed)
 
@@ -168,7 +175,7 @@ def block_user(user_id):
         flash('Non puoi bloccare te stesso!', 'warning')
         return redirect(request.referrer or url_for('main.index'))
     
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     existing = BlockedUser.query.filter_by(
         blocker_id=current_user.id,
         blocked_id=user_id
@@ -182,7 +189,7 @@ def block_user(user_id):
         try:
             db.session.commit()
             flash(f'{user.username} è stato bloccato.', 'success')
-        except:
+        except Exception as e:
             db.session.rollback()
             flash('Errore durante il blocco.', 'danger')
     
@@ -192,7 +199,7 @@ def block_user(user_id):
 @main_bp.route('/unblock/<int:user_id>', methods=['POST'])
 @login_required
 def unblock_user(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     block = BlockedUser.query.filter_by(
         blocker_id=current_user.id,
         blocked_id=user_id
@@ -203,7 +210,7 @@ def unblock_user(user_id):
         try:
             db.session.commit()
             flash(f'{user.username} è stato sbloccato.', 'success')
-        except:
+        except Exception as e:
             db.session.rollback()
             flash('Errore durante lo sblocco.', 'danger')
     else:

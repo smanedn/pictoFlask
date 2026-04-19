@@ -29,6 +29,26 @@ def create_app(config_class=Config) -> Flask:
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
+    # ── Security headers ──────────────────────────────────────────────────────
+    @app.after_request
+    def set_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        # Permissive CSP: allow inline scripts/styles (needed by the app) but
+        # restrict framing and object embeds.
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.socket.io https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+            "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+            "img-src 'self' data:; "
+            "connect-src 'self' ws: wss:; "
+            "object-src 'none'; "
+            "frame-ancestors 'self';"
+        )
+        return response
+
     # Register blueprints
     register_blueprints(app)
 

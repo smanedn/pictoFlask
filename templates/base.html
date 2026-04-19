@@ -3,9 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="PictoFlask – Chat in tempo reale ispirata al PictoChat del Nintendo DS. Messaggi istantanei, disegni, messaggi privati e molto altro.">
+    <meta property="og:title" content="PictoFlask">
+    <meta property="og:description" content="Chat in tempo reale ispirata al PictoChat del Nintendo DS.">
+    <meta property="og:type" content="website">
     <title>{% block title %}PictoFlask{% endblock %}</title>
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='%234a90d9' d='M512 240c0 114.9-114.6 208-256 208c-37.1 0-72.3-6.4-104.1-17.9c-11.9 8.7-31.3 20.6-54.3 30.6C73.6 471.1 44.7 480 16 480c-6.5 0-12.3-3.9-14.8-9.9c-2.5-6-1.1-12.8 3.4-17.4c0 0 21.3-22 34.9-46.1c11.2-19.8 13.9-39 12.1-51.5C18.6 322.2 0 283.1 0 240C0 125.1 114.6 32 256 32s256 93.1 256 208z'/></svg>">
 
     <style>
     :root {
@@ -22,6 +31,23 @@
         --ds-header-bg: #3a3a3a;
         --ds-success: #00a238;
         --ds-error: #fb0018;
+    }
+
+    /* Auto dark mode if no saved preference */
+    @media (prefers-color-scheme: dark) {
+        html:not([data-theme-set]) {
+            --ds-bg: #1a1a1a;
+            --ds-screen-bg: #252525;
+            --ds-border: #4a4a4a;
+            --ds-accent: #61829a;
+            --ds-text: #e0e0e0;
+            --ds-text-muted: #888888;
+            --ds-card-bg: #2a2a2a;
+            --ds-input-bg: #333333;
+            --ds-bubble-my: #4a7a99;
+            --ds-bubble-other: #3a3a3a;
+            --ds-header-bg: #1a1a1a;
+        }
     }
 
     [data-bs-theme="dark"] {
@@ -423,14 +449,14 @@
     .ds-sidebar {
         position: fixed;
         top: 0;
-        left: -220px;
-        width: 220px;
+        left: -240px;
+        width: 240px;
         height: 100vh;
         background: var(--ds-card-bg);
-        border-right: 3px solid var(--ds-border);
+        border-right: 4px solid var(--ds-border);
         z-index: 1000;
-        transition: left 0.3s ease;
-        box-shadow: 4px 0 10px rgba(0,0,0,0.2);
+        transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 4px 0 15px rgba(0,0,0,0.4);
     }
 
     .ds-sidebar.open {
@@ -442,10 +468,11 @@
         background: var(--ds-header-bg);
         color: #fff;
         font-size: 10px;
-        border-bottom: 2px solid var(--ds-border);
+        border-bottom: 3px solid var(--ds-border);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2);
     }
 
     .ds-sidebar-close {
@@ -475,11 +502,14 @@
         text-decoration: none;
         font-size: 9px;
         gap: 10px;
-        transition: background 0.2s;
+        transition: all 0.2s ease;
+        position: relative;
     }
 
     .ds-sidebar-menu a:hover {
         background: var(--ds-screen-bg);
+        transform: translateX(6px);
+        color: var(--ds-accent);
     }
 
     .ds-sidebar-menu a i {
@@ -503,7 +533,9 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
         z-index: 999;
         display: none;
     }
@@ -1433,6 +1465,73 @@
             margin: 5px auto;
         }
     }
+    /* ==================== MESSAGE ANIMATION ==================== */
+    @keyframes msgFadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .ds-message {
+        animation: msgFadeIn 0.25s ease-out both;
+    }
+
+    /* ==================== DS MODAL ==================== */
+    .ds-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 9000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: modalFadeIn 0.15s ease;
+    }
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    .ds-modal {
+        background: var(--ds-card-bg);
+        border: 3px solid var(--ds-border);
+        border-radius: 4px;
+        padding: 0;
+        min-width: 280px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        animation: modalSlideIn 0.2s ease;
+    }
+    @keyframes modalSlideIn {
+        from { transform: scale(0.9) translateY(-10px); opacity: 0; }
+        to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .ds-modal-header {
+        background: var(--ds-header-bg);
+        color: #fff;
+        padding: 12px 16px;
+        font-size: 10px;
+        border-bottom: 2px solid var(--ds-border);
+    }
+    .ds-modal-body {
+        padding: 20px 16px;
+        font-size: 9px;
+        line-height: 1.8;
+        color: var(--ds-text);
+    }
+    .ds-modal-footer {
+        padding: 12px 16px;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        border-top: 1px solid var(--ds-border);
+    }
+    /* Flash auto-dismiss */
+    .ds-alert {
+        transition: opacity 0.5s ease;
+    }
+    .ds-alert.fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
 </style>
 </head>
 <body>
@@ -1533,21 +1632,76 @@
         const toggleBtn = document.getElementById('theme-toggle');
         const html = document.documentElement;
 
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-bs-theme', savedTheme);
-        toggleBtn.innerHTML = savedTheme === 'dark' 
-            ? '<i class="fas fa-sun"></i>' 
+        // Load saved theme (respect prefers-color-scheme if no saved pref)
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const activeTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+        html.setAttribute('data-bs-theme', activeTheme);
+        if (savedTheme) html.setAttribute('data-theme-set', '1');
+        toggleBtn.innerHTML = activeTheme === 'dark'
+            ? '<i class="fas fa-sun"></i>'
             : '<i class="fas fa-moon"></i>';
 
         toggleBtn.addEventListener('click', () => {
             const current = html.getAttribute('data-bs-theme');
             const next = current === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-bs-theme', next);
-            toggleBtn.innerHTML = next === 'dark' 
-                ? '<i class="fas fa-sun"></i>' 
+            html.setAttribute('data-theme-set', '1');
+            toggleBtn.innerHTML = next === 'dark'
+                ? '<i class="fas fa-sun"></i>'
                 : '<i class="fas fa-moon"></i>';
             localStorage.setItem('theme', next);
+        });
+
+        // ── DS Modal (replaces browser confirm/alert) ───────────────────────────
+        function dsConfirm(message, title) {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'ds-modal-overlay';
+                overlay.innerHTML = `
+                    <div class="ds-modal" role="dialog" aria-modal="true">
+                        <div class="ds-modal-header"><i class="fas fa-exclamation-triangle"></i> ${title || 'CONFERMA'}</div>
+                        <div class="ds-modal-body">${message}</div>
+                        <div class="ds-modal-footer">
+                            <button id="dsModalCancel" class="ds-btn ds-btn-outline ds-btn-sm">ANNULLA</button>
+                            <button id="dsModalOk" class="ds-btn ds-btn-danger ds-btn-sm">CONFERMA</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+                overlay.querySelector('#dsModalOk').focus();
+                overlay.querySelector('#dsModalOk').addEventListener('click', () => { overlay.remove(); resolve(true); });
+                overlay.querySelector('#dsModalCancel').addEventListener('click', () => { overlay.remove(); resolve(false); });
+                overlay.addEventListener('keydown', (e) => { if (e.key === 'Escape') { overlay.remove(); resolve(false); } });
+            });
+        }
+        window.dsConfirm = dsConfirm;
+
+        function dsAlert(message, title) {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'ds-modal-overlay';
+                overlay.innerHTML = `
+                    <div class="ds-modal" role="dialog" aria-modal="true">
+                        <div class="ds-modal-header"><i class="fas fa-info-circle"></i> ${title || 'AVVISO'}</div>
+                        <div class="ds-modal-body">${message}</div>
+                        <div class="ds-modal-footer">
+                            <button id="dsModalOk" class="ds-btn ds-btn-primary ds-btn-sm">OK</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+                overlay.querySelector('#dsModalOk').focus();
+                overlay.querySelector('#dsModalOk').addEventListener('click', () => { overlay.remove(); resolve(); });
+                overlay.addEventListener('keydown', (e) => { if (e.key === 'Escape') { overlay.remove(); resolve(); } });
+            });
+        }
+        window.dsAlert = dsAlert;
+
+        // ── Auto-dismiss flash messages ────────────────────────────────────────
+        document.querySelectorAll('.ds-alert').forEach(el => {
+            setTimeout(() => {
+                el.classList.add('fade-out');
+                setTimeout(() => el.remove(), 500);
+            }, 4000);
         });
 
         // Background Music Control

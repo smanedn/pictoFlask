@@ -43,9 +43,17 @@
                 <div class="ds-online-header">
                     <span class="ds-online-dot"></span>
                     <span>UTENTI ONLINE: <span id="onlineCount">0</span></span>
+                    <!-- Search toggle -->
+                    <button id="searchToggleBtn" class="ds-btn ds-btn-sm ds-btn-outline" title="Cerca nei messaggi" style="margin-left:auto; font-size:7px; padding:4px 8px;">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
                 <div id="onlineUsers" class="ds-online-users">
                     <!-- Users will be added here -->
+                </div>
+                <!-- Search bar (hidden by default) -->
+                <div id="searchBar" style="display:none; padding:6px 0 2px;">
+                    <input type="text" id="searchInput" class="ds-input" placeholder="Cerca nei messaggi..." autocomplete="off" style="font-size:8px; padding:6px 10px;">
                 </div>
             </div>
 
@@ -61,6 +69,9 @@
             <form id="form" class="ds-input-area">
                 <button type="button" id="emojiBtn" class="ds-btn ds-btn-outline" title="Emoji">
                     <i class="fas fa-smile"></i>
+                </button>
+                <button type="button" id="drawBtn" class="ds-btn ds-btn-outline" title="Disegna (PictoChat)">
+                    <i class="fas fa-pen-nib"></i>
                 </button>
                 <div class="ds-input-wrapper">
                     <input type="text" id="input" class="ds-input" placeholder="Scrivi..." autocomplete="off" maxlength="500" required>
@@ -104,7 +115,55 @@
     </div>
 </div>
 
+<!-- ==================== DRAWING CANVAS MODAL ==================== -->
+<div id="drawModal" class="ds-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Canvas disegno">
+    <div class="ds-modal" style="max-width:520px; width:95%;">
+        <div class="ds-modal-header">
+            <i class="fas fa-paint-brush"></i> PICTOCHAT — DISEGNA
+        </div>
+        <div class="ds-modal-body" style="padding:12px;">
+            <!-- Toolbar -->
+            <div class="draw-toolbar">
+                <!-- Colors -->
+                <div class="draw-colors">
+                    <button class="draw-color-btn active" data-color="#000000" style="background:#000000;" title="Nero"></button>
+                    <button class="draw-color-btn" data-color="#ffffff" style="background:#ffffff; border-color:#999;" title="Bianco"></button>
+                    <button class="draw-color-btn" data-color="#fb0018" style="background:#fb0018;" title="Rosso"></button>
+                    <button class="draw-color-btn" data-color="#0059f3" style="background:#0059f3;" title="Blu"></button>
+                    <button class="draw-color-btn" data-color="#00a238" style="background:#00a238;" title="Verde"></button>
+                    <button class="draw-color-btn" data-color="#fb9200" style="background:#fb9200;" title="Arancio"></button>
+                    <button class="draw-color-btn" data-color="#8a00d3" style="background:#8a00d3;" title="Viola"></button>
+                    <button class="draw-color-btn" data-color="#f3e300" style="background:#f3e300;" title="Giallo"></button>
+                </div>
+                <!-- Tools -->
+                <div class="draw-tools">
+                    <button id="drawPenBtn" class="ds-btn ds-btn-sm ds-btn-primary" title="Penna"><i class="fas fa-pen"></i></button>
+                    <button id="drawEraserBtn" class="ds-btn ds-btn-sm ds-btn-outline" title="Gomma"><i class="fas fa-eraser"></i></button>
+                </div>
+                <!-- Size -->
+                <div class="draw-size">
+                    <label style="font-size:7px; color:var(--ds-text-muted);">SIZE</label>
+                    <input type="range" id="brushSize" min="1" max="20" value="3" style="width:80px;">
+                    <span id="brushSizeLabel" style="font-size:7px; min-width:20px;">3</span>
+                </div>
+                <!-- Actions -->
+                <button id="drawClearBtn" class="ds-btn ds-btn-sm ds-btn-outline" title="Cancella tutto"><i class="fas fa-trash"></i> CLEAR</button>
+            </div>
+            <!-- Canvas -->
+            <canvas id="drawCanvas" width="480" height="200" style="border:2px solid var(--ds-border); background:#fff; cursor:crosshair; display:block; width:100%; touch-action:none; border-radius:2px; margin-top:8px;"></canvas>
+            <div style="font-size:7px; color:var(--ds-text-muted); margin-top:4px; text-align:center;">
+                Disegna con il mouse o con il dito 🖊️
+            </div>
+        </div>
+        <div class="ds-modal-footer">
+            <button id="drawCancel" class="ds-btn ds-btn-outline ds-btn-sm">ANNULLA</button>
+            <button id="drawSend" class="ds-btn ds-btn-primary ds-btn-sm"><i class="fas fa-paper-plane"></i> INVIA</button>
+        </div>
+    </div>
+</div>
+
 <style>
+/* ==================== EMOJI PICKER ==================== */
 .ds-emoji-picker {
     position: absolute;
     bottom: 70px;
@@ -132,6 +191,8 @@
 .ds-emoji:hover {
     background: var(--ds-screen-bg);
 }
+
+/* ==================== DELETE BUTTON ==================== */
 .ds-delete-btn {
     position: absolute;
     top: 4px;
@@ -156,6 +217,73 @@
 .ds-bubble:hover .ds-delete-btn {
     opacity: 1;
 }
+/* Always visible on touch devices */
+@media (pointer: coarse) {
+    .ds-delete-btn {
+        opacity: 0.7;
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+    }
+}
+
+/* ==================== DRAWING CANVAS INLINE IMAGE ==================== */
+.ds-draw-image {
+    max-width: 100%;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.15);
+    display: block;
+    margin-top: 4px;
+    image-rendering: pixelated;
+}
+
+/* ==================== DRAWING TOOLBAR ==================== */
+.draw-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 0;
+}
+.draw-colors {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.draw-color-btn {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--ds-border);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    padding: 0;
+}
+.draw-color-btn.active {
+    box-shadow: 0 0 0 3px var(--ds-accent);
+    transform: scale(1.15);
+}
+.draw-tools {
+    display: flex;
+    gap: 4px;
+}
+.draw-size {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ==================== SEARCH HIGHLIGHT ==================== */
+.ds-message.search-hidden {
+    display: none;
+}
+.search-highlight {
+    background: rgba(251, 146, 0, 0.4);
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 480px) {
     .ds-emoji-picker {
         left: 5px;
@@ -168,14 +296,18 @@
         font-size: 16px;
         padding: 3px;
     }
+    #drawCanvas {
+        height: 160px;
+    }
 }
 </style>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
 <script>
     // ==================== SOUND EFFECTS ====================
     const sounds = {
         send: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2JkI2IeG1nanN+iI+OhXlsZGZxfYmRjoZ5bGNlcX6KkY+Gd2xjZXGAi5KQiHdsY2VwgIuTkYh4bWNlb4CLk5GJd21jZG+Ai5OSiXdtY2RvgIuTkol3bWNkb4CLk5KJd21jZG+Ai5OSiXdtY2RvgIuTkol3bWNkb4CLk5KJd21jZG+Ai5KSiXdsY2Rvf4uSkYh3bGNkb3+LkpGJd2xjZG9/i5KRiXdsY2Rvf4uSkYl3bGNkb3+LkpGJd2xjZG9/i5KRiXdsY2Rvf4uSkYl3bGNlb3+LkpGJd2xjZW9/i5KRiXdsY2VwgIuSkYl3bGRlcICMkpKJeG1jZXGAjJKSind'),
-        receive: new Audio('data:audio/wav;base64,UklGRl4GAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YToGAAB/goaCfHh3en+EiIiFgHt3dnh+g4iKiIN+eXZ2en+EiYuJhH95dnZ5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnZ5foSJi4qFgHl2dnl+hImLioWAeXZ2eX6EiYuKhYB5dnZ5foSJi4qFgHl2dnl+hImLioWAeXZ2eX6EiYuKhYB5dnd5foSJi4qF'),
+        receive: new Audio('data:audio/wav;base64,UklGRl4GAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YToGAAB/goaCfHh3en+EiIiFgHt3dnh+g4iKiIN+eXZ2en+EiYuJhH95dnZ5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ1eX6EiYuKhYB5dnV5foSJi4qFgHl2dXl+hImLioWAeXZ2eX6EiYuKhYB5dnZ5foSJi4qFgHl2dnl+hImLioWAeXZ2eX6EiYuKhYB5dnZ5foSJi4qFgHl2dnl+hImLioWAeXZ2eX6EiYuKhYB5dnd5foSJi4qF'),
         join: new Audio('data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YToFAAB3e4KHi4yKhH15dXR2e4GHi4yLh4F7dnRzeX+Gi4yMiYN9d3Rzd32EiYuMi4eBfHdzc3d9hImLjIuHgXx3c3N3fYSJi4yLh4F8d3Nzd32EiYuMi4eBfHdzc3d9hImLjIuHgXx3c3N3fYSJi4yLh4F8d3Nzd32EiYuMi4eBfHdzc3d9hImLjIuHgXx3c3N3fYSJi4yLh4F8d3Nzd32EiYuMi4eBfHdzdHd9hImLjIuHgXx3dHR3fYSJi4yLh4F8d3R0d32EiYuMi4eBfHd0dHd9hImLjIuHgXx3dHR3fYSJi4yLh4F8d3R0eH2EiYuMi4eBfHd0')
     };
     
@@ -206,6 +338,9 @@
     const isAdmin = {{ 'true' if is_admin else 'false' }};
     const emojiPicker = document.getElementById('emojiPicker');
     const emojiBtn = document.getElementById('emojiBtn');
+    const searchToggleBtn = document.getElementById('searchToggleBtn');
+    const searchBar = document.getElementById('searchBar');
+    const searchInput = document.getElementById('searchInput');
     
     // ==================== UNREAD MESSAGES ====================
     let unreadCount = 0;
@@ -258,6 +393,15 @@
         else if (len > 400) charCounter.classList.add('warning');
     });
 
+    // ==================== KEYBOARD SHORTCUT Ctrl+/ ====================
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+            e.preventDefault();
+            input.focus();
+            input.select();
+        }
+    });
+
     // ==================== TYPING INDICATOR ====================
     let typingTimeout;
     let isTyping = false;
@@ -301,7 +445,7 @@
         onlineCountEl.textContent = users.length;
         onlineUsersEl.innerHTML = users.map(u => `
             <a href="/user/${encodeURIComponent(u.username)}" class="ds-online-user" style="border-left: 3px solid ${u.color};">
-                <img src="/uploads/profiles/${u.profile_pic || 'default.jpg'}" alt="${u.username}">
+                <img src="/uploads/profiles/${u.profile_pic || 'default.jpg'}" alt="${u.username}" loading="lazy" width="18" height="18">
                 <span>${u.username}</span>
             </a>
         `).join('');
@@ -320,6 +464,12 @@
     });
 
     // ==================== MESSAGE HANDLING ====================
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function addMessage(data, isStatus = false) {
         const div = document.createElement('div');
 
@@ -331,25 +481,46 @@
             const canDelete = (data.user_id === currentUserId) || isAdmin;
             div.className = 'ds-message' + (isMe ? ' ds-message-mine' : '');
             if (data.id) div.setAttribute('data-message-id', data.id);
+            if (data.msg) div.setAttribute('data-search-text', data.msg.toLowerCase());
 
             const picUrl = `/uploads/profiles/${data.profile_pic || 'default.jpg'}`;
             const profileUrl = `/user/${encodeURIComponent(data.username)}`;
             const bubbleColor = data.color || '#61829a';
-            const deleteBtn = canDelete && data.id ? `<button class="ds-delete-btn" onclick="deleteMessage(${data.id})" title="Elimina"><i class="fas fa-times"></i></button>` : '';
+            const deleteBtn = canDelete && data.id
+                ? `<button class="ds-delete-btn" data-msgid="${data.id}" title="Elimina"><i class="fas fa-times"></i></button>`
+                : '';
+
+            // If it's a drawing message
+            const imageHtml = data.image_data
+                ? `<img src="${data.image_data}" class="ds-draw-image" alt="Disegno" loading="lazy">`
+                : '';
+            const textHtml = data.msg && data.msg !== '[Disegno]'
+                ? `<div class="ds-message-text">${escapeHtml(data.msg)}</div>`
+                : (imageHtml ? '' : `<div class="ds-message-text">${escapeHtml(data.msg)}</div>`);
 
             div.innerHTML = `
                 <a href="${profileUrl}" title="Profilo di ${data.username}">
-                    <img src="${picUrl}" class="ds-avatar" alt="${data.username}">
+                    <img src="${picUrl}" class="ds-avatar" alt="${data.username}" loading="lazy" width="36" height="36">
                 </a>
                 <div class="ds-bubble" style="background-color: ${isMe ? bubbleColor : ''};">
                     ${deleteBtn}
                     <a href="${profileUrl}" class="ds-message-username" style="text-decoration:none;color:${isMe ? 'rgba(255,255,255,0.8)' : bubbleColor};">
-                        ${data.username}
+                        ${escapeHtml(data.username)}
                     </a>
-                    <div class="ds-message-text">${escapeHtml(data.msg)}</div>
+                    ${textHtml}
+                    ${imageHtml}
                     <div class="ds-message-time">${data.time}</div>
                 </div>
             `;
+
+            // Delete button event (use DS confirm modal)
+            const delBtn = div.querySelector('.ds-delete-btn');
+            if (delBtn) {
+                delBtn.addEventListener('click', async () => {
+                    const ok = await window.dsConfirm('Eliminare questo messaggio?', 'ELIMINA');
+                    if (ok) socket.emit('delete_message', { message_id: parseInt(delBtn.dataset.msgid) });
+                });
+            }
         }
 
         chat.appendChild(div);
@@ -358,11 +529,13 @@
         if (wasAtBottom || isStatus) {
             chat.scrollTop = chat.scrollHeight;
         }
-    }
 
-    function deleteMessage(messageId) {
-        if (confirm('Eliminare questo messaggio?')) {
-            socket.emit('delete_message', { message_id: messageId });
+        // If search is active, apply filter to new message
+        const q = searchInput.value.trim().toLowerCase();
+        if (q && div.getAttribute('data-search-text')) {
+            if (!div.getAttribute('data-search-text').includes(q)) {
+                div.classList.add('search-hidden');
+            }
         }
     }
 
@@ -370,15 +543,10 @@
         const msgEl = document.querySelector(`[data-message-id="${data.message_id}"]`);
         if (msgEl) {
             msgEl.style.opacity = '0';
+            msgEl.style.transition = 'opacity 0.3s';
             setTimeout(() => msgEl.remove(), 300);
         }
     });
-    
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
 
     // ==================== LOAD HISTORY ====================
     const history = {{ history_json | safe }};
@@ -407,8 +575,8 @@
         playSound('join');
     });
     
-    socket.on('kicked', (data) => {
-        alert(data.msg);
+    socket.on('kicked', async (data) => {
+        await window.dsAlert(data.msg, 'SESSIONE TERMINATA');
         window.location.href = '/logout';
     });
 
@@ -427,17 +595,210 @@
         }
     });
 
-    // ==================== SESSION CHECK ====================
+    // ==================== SESSION CHECK (every 30s) ====================
     setInterval(() => {
         fetch('/check_session')
             .then(res => res.json())
-            .then(data => {
+            .then(async data => {
                 if (!data.valid) {
-                    alert('Sessione terminata da altro dispositivo.');
+                    await window.dsAlert('Sessione terminata da altro dispositivo.', 'SESSIONE SCADUTA');
                     window.location.href = '/logout';
                 }
             })
             .catch(() => {});
-    }, 3000);
+    }, 30000);
+
+    // ==================== MESSAGE SEARCH ====================
+    let searchActive = false;
+
+    searchToggleBtn.addEventListener('click', () => {
+        searchActive = !searchActive;
+        searchBar.style.display = searchActive ? 'block' : 'none';
+        searchToggleBtn.classList.toggle('ds-btn-primary', searchActive);
+        searchToggleBtn.classList.toggle('ds-btn-outline', !searchActive);
+        if (searchActive) {
+            searchInput.focus();
+        } else {
+            searchInput.value = '';
+            applySearch('');
+        }
+    });
+
+    searchInput.addEventListener('input', () => {
+        applySearch(searchInput.value.trim().toLowerCase());
+    });
+
+    function applySearch(query) {
+        document.querySelectorAll('#chat .ds-message').forEach(el => {
+            const text = el.getAttribute('data-search-text') || '';
+            if (!query || text.includes(query)) {
+                el.classList.remove('search-hidden');
+                // Highlight matches
+                const textEl = el.querySelector('.ds-message-text');
+                if (textEl && query) {
+                    const original = textEl.textContent;
+                    const escaped = escapeHtml(original);
+                    const highlighted = escaped.replace(
+                        new RegExp(escapeRegex(escapeHtml(query)), 'gi'),
+                        m => `<span class="search-highlight">${m}</span>`
+                    );
+                    textEl.innerHTML = highlighted;
+                } else if (textEl) {
+                    // Reset to plain text
+                    textEl.textContent = textEl.textContent;
+                }
+            } else {
+                el.classList.add('search-hidden');
+            }
+        });
+    }
+
+    function escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // ==================== DRAWING CANVAS ====================
+    const drawBtn = document.getElementById('drawBtn');
+    const drawModal = document.getElementById('drawModal');
+    const drawCancel = document.getElementById('drawCancel');
+    const drawSend = document.getElementById('drawSend');
+    const drawCanvas = document.getElementById('drawCanvas');
+    const drawClearBtn = document.getElementById('drawClearBtn');
+    const drawPenBtn = document.getElementById('drawPenBtn');
+    const drawEraserBtn = document.getElementById('drawEraserBtn');
+    const brushSizeSlider = document.getElementById('brushSize');
+    const brushSizeLabel = document.getElementById('brushSizeLabel');
+    const ctx = drawCanvas.getContext('2d');
+
+    let drawColor = '#000000';
+    let drawEraser = false;
+    let drawLineWidth = 3;
+    let isPainting = false;
+    let lastX = 0, lastY = 0;
+
+    // Correct coordinates accounting for canvas CSS scaling
+    function getPos(e) {
+        const rect = drawCanvas.getBoundingClientRect();
+        const scaleX = drawCanvas.width / rect.width;
+        const scaleY = drawCanvas.height / rect.height;
+        if (e.touches) {
+            return {
+                x: (e.touches[0].clientX - rect.left) * scaleX,
+                y: (e.touches[0].clientY - rect.top) * scaleY
+            };
+        }
+        return {
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY
+        };
+    }
+
+    function startDraw(e) {
+        e.preventDefault();
+        isPainting = true;
+        const pos = getPos(e);
+        lastX = pos.x; lastY = pos.y;
+        ctx.beginPath();
+        ctx.arc(lastX, lastY, (drawEraser ? drawLineWidth * 3 : drawLineWidth) / 2, 0, Math.PI * 2);
+        ctx.fillStyle = drawEraser ? '#ffffff' : drawColor;
+        ctx.fill();
+    }
+
+    function draw(e) {
+        e.preventDefault();
+        if (!isPainting) return;
+        const pos = getPos(e);
+        ctx.globalCompositeOperation = drawEraser ? 'source-over' : 'source-over';
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = drawEraser ? '#ffffff' : drawColor;
+        ctx.lineWidth = drawEraser ? drawLineWidth * 3 : drawLineWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        lastX = pos.x; lastY = pos.y;
+    }
+
+    function stopDraw() { isPainting = false; }
+
+    drawCanvas.addEventListener('mousedown', startDraw);
+    drawCanvas.addEventListener('mousemove', draw);
+    drawCanvas.addEventListener('mouseup', stopDraw);
+    drawCanvas.addEventListener('mouseleave', stopDraw);
+    drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
+    drawCanvas.addEventListener('touchmove', draw, { passive: false });
+    drawCanvas.addEventListener('touchend', stopDraw);
+
+    // Color selection
+    document.querySelectorAll('.draw-color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            drawColor = btn.dataset.color;
+            drawEraser = false;
+            document.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            drawPenBtn.classList.add('ds-btn-primary');
+            drawPenBtn.classList.remove('ds-btn-outline');
+            drawEraserBtn.classList.remove('ds-btn-primary');
+            drawEraserBtn.classList.add('ds-btn-outline');
+        });
+    });
+
+    // Tool buttons
+    drawPenBtn.addEventListener('click', () => {
+        drawEraser = false;
+        drawPenBtn.classList.add('ds-btn-primary');
+        drawPenBtn.classList.remove('ds-btn-outline');
+        drawEraserBtn.classList.remove('ds-btn-primary');
+        drawEraserBtn.classList.add('ds-btn-outline');
+    });
+    drawEraserBtn.addEventListener('click', () => {
+        drawEraser = true;
+        drawEraserBtn.classList.add('ds-btn-primary');
+        drawEraserBtn.classList.remove('ds-btn-outline');
+        drawPenBtn.classList.remove('ds-btn-primary');
+        drawPenBtn.classList.add('ds-btn-outline');
+    });
+
+    // Brush size
+    brushSizeSlider.addEventListener('input', () => {
+        drawLineWidth = parseInt(brushSizeSlider.value);
+        brushSizeLabel.textContent = drawLineWidth;
+    });
+
+    // Clear canvas
+    drawClearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    });
+
+    // Open / close modal
+    drawBtn.addEventListener('click', () => {
+        drawModal.style.display = 'flex';
+        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    });
+    drawCancel.addEventListener('click', () => {
+        drawModal.style.display = 'none';
+    });
+    drawModal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') drawModal.style.display = 'none';
+    });
+
+    // Check if canvas is blank
+    function isCanvasBlank() {
+        const data = ctx.getImageData(0, 0, drawCanvas.width, drawCanvas.height).data;
+        return !data.some(ch => ch !== 0);
+    }
+
+    // Send drawing
+    drawSend.addEventListener('click', () => {
+        if (isCanvasBlank()) {
+            window.dsAlert('Disegna qualcosa prima di inviare!', 'CANVAS VUOTO');
+            return;
+        }
+        const imageData = drawCanvas.toDataURL('image/png');
+        socket.emit('draw_message', { image_data: imageData });
+        drawModal.style.display = 'none';
+        playSound('send');
+    });
 </script>
 {% endblock %}

@@ -9,6 +9,7 @@
 
 **A real-time chat application inspired by Nintendo DS's PictoChat**
 
+🎉 **Version 1.0 - Final Release** 🎉
 Built with Flask, Socket.IO, and authentic Nintendo DS styling
 
 [Features](#-features) • [Demo](#-demo) • [Installation](#-installation) • [Usage](#-usage) • [Contributing](#-contributing)
@@ -329,11 +330,11 @@ pictoFlask/
 
 - [x] Private messaging
 - [x] Message deletion
-- [ ] Drawing canvas (like real PictoChat!)
+- [x] Drawing canvas (like real PictoChat!)
 - [ ] Multiple chat rooms
 - [ ] Image/file sharing
 - [x] Emoji picker
-- [ ] Message search
+- [x] Message search
 - [x] User blocking
 - [x] Admin panel
 - [ ] Mobile app (React Native)

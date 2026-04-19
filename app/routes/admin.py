@@ -68,7 +68,7 @@ def users():
 @admin_required
 def toggle_admin(user_id):
     """Promote/demote user admin status."""
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     
     # Prevent self-demotion
     if user.id == current_user.id:
@@ -91,7 +91,7 @@ def toggle_admin(user_id):
 @admin_required
 def delete_user(user_id):
     """Delete a user."""
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     
     # Prevent self-deletion
     if user.id == current_user.id:
@@ -143,7 +143,7 @@ def messages():
 @admin_required
 def delete_message(message_id):
     """Delete a single message."""
-    message = Message.query.get_or_404(message_id)
+    message = db.get_or_404(Message, message_id)
     
     try:
         db.session.delete(message)

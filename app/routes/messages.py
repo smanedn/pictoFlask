@@ -65,7 +65,7 @@ def inbox():
 @messages_bp.route('/conversation/<int:user_id>')
 @login_required
 def conversation(user_id):
-    other_user = User.query.get_or_404(user_id)
+    other_user = db.get_or_404(User, user_id)
     
     if other_user.id == current_user.id:
         flash('Non puoi inviare messaggi a te stesso!', 'warning')
@@ -110,7 +110,7 @@ def conversation(user_id):
 @messages_bp.route('/send/<int:user_id>', methods=['POST'])
 @login_required
 def send_message(user_id):
-    other_user = User.query.get_or_404(user_id)
+    other_user = db.get_or_404(User, user_id)
     
     if other_user.id == current_user.id:
         return jsonify({'success': False, 'error': 'Non puoi inviare messaggi a te stesso'}), 400
